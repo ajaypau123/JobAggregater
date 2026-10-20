@@ -23,7 +23,6 @@ output/*.json
 
 # Dashboard data files (auto-generated, too large)
 dashboard/jobs_latest.json
-dashboard/jobs_latest.js
 
 # OS files
 .DS_Store
