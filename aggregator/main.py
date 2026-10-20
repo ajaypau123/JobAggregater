@@ -319,6 +319,19 @@ def run(
         # Export JSON for the web dashboard (cumulative dataset with is_india_eligible flag)
         if export_json:
             import json
+            import re
+
+            def _to_lightweight(j: dict) -> dict:
+                c = dict(j)
+                desc = c.get("description") or ""
+                text = re.sub(r"<[^>]+>", " ", desc)
+                text = re.sub(r"\s+", " ", text).strip()
+                if len(text) > 600:
+                    c["description"] = text[:600] + "... [Click 'Apply on Official Site' for full requirements]"
+                else:
+                    c["description"] = text
+                return c
+
             json_filename = f"jobs{filter_slug}_{timestamp}.json"
             json_path = os.path.join(output_dir, json_filename)
             with open(json_path, "w", encoding="utf-8") as f:
@@ -328,12 +341,22 @@ def run(
                 json.dump(cumulative_dataset, f, indent=2, ensure_ascii=False)
             dashboard_dir = os.path.join(os.path.dirname(output_dir), "dashboard")
             if os.path.isdir(dashboard_dir):
+                # Prepare high-performance lightweight dataset for the browser
+                if india_only:
+                    dash_jobs = [
+                        _to_lightweight(j)
+                        for j in cumulative_dataset
+                        if j.get("is_india_eligible") is not False
+                    ]
+                else:
+                    dash_jobs = [_to_lightweight(j) for j in cumulative_dataset]
+
                 dash_json = os.path.join(dashboard_dir, "jobs_latest.json")
                 with open(dash_json, "w", encoding="utf-8") as f:
-                    json.dump(cumulative_dataset, f, indent=2, ensure_ascii=False)
+                    json.dump(dash_jobs, f, indent=2, ensure_ascii=False)
                 dash_js = os.path.join(dashboard_dir, "jobs_latest.js")
                 clean_js = (
-                    json.dumps(cumulative_dataset, ensure_ascii=False)
+                    json.dumps(dash_jobs, ensure_ascii=False)
                     .replace("\u2028", "\\u2028")
                     .replace("\u2029", "\\u2029")
                 )
