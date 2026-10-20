@@ -43,18 +43,23 @@ jobs:
 
       - name: Copy latest jobs feed into dashboard directory
         run: |
-          cp output/jobs_latest.json dashboard/jobs_latest.json
+          # Copy latest jobs feed into dashboard
+          if [ -f output/jobs_latest.json ]; then
+            cp output/jobs_latest.json dashboard/jobs_latest.json
+          fi
 
       - name: Commit & Push Updated Jobs and SQLite DB
+        continue-on-error: true
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add output/jobs_latest.json output/jobs.db dashboard/jobs_latest.json
+          git add -f output/jobs_latest.json output/jobs.db dashboard/jobs_latest.json dashboard/jobs_latest.js || true
           git commit -m "Auto-update job listings [skip ci]" || echo "No changes to commit"
-          git push
+          git push || echo "Push failed, proceeding with deployment"
 
   deploy-dashboard:
     needs: scrape-and-update
+    if: always()
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -62,13 +67,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Prepare Dashboard folder for GitHub Pages
-        run: |
-          # Ensure jobs_latest.json is inside dashboard/
-          if [ -f output/jobs_latest.json ]; then
-            cp output/jobs_latest.json dashboard/jobs_latest.json
-          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
