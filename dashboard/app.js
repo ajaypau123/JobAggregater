@@ -1,0 +1,1597 @@
+/**
+ * JobsForIndia - Dashboard Application Logic
+ * 
+ * Features:
+ * - Dynamic Job Data Loading from aggregator output
+ * - Live Instant Search with Debouncing
+ * - Role Category Filtering & Multi-attribute Toggles (Direct ATS, India, Remote)
+ * - Accessible Dialog Modal & Focus Management (WCAG 2.1 AA)
+ * - Schema.org JSON-LD Generation for Google Jobs Organic SEO
+ */
+
+// Application State
+// ============================================================
+// STATE MANAGEMENT & DATA PERSISTENCE
+// ============================================================
+
+const STORAGE_KEYS = {
+  SAVED: 'jfi_saved_jobs',
+  APPLIED: 'jfi_applied_jobs',
+  REPORTED: 'jfi_reported_jobs',
+  PRO_PASS: 'jfi_pro_pass',
+};
+
+
+
+function getSavedJobIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(STORAGE_KEYS.SAVED) || '[]'));
+  } catch { return new Set(); }
+}
+
+function getAppliedJobsMap() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.APPLIED);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const map = {};
+      const now = Date.now();
+      parsed.forEach(id => { map[id] = now; });
+      return map;
+    } else if (typeof parsed === 'object' && parsed !== null) {
+      return parsed;
+    }
+    return {};
+  } catch { return {}; }
+}
+
+function saveAppliedJobsMap(map) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.APPLIED, JSON.stringify(map));
+  } catch (err) {
+    console.error('Failed to save applied jobs map:', err);
+  }
+}
+
+function getAppliedJobIds() {
+  const map = getAppliedJobsMap();
+  return new Set(Object.keys(map));
+}
+
+function isDateToday(timestamp) {
+  if (!timestamp) return false;
+  const d = new Date(timestamp);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() &&
+         d.getMonth() === now.getMonth() &&
+         d.getDate() === now.getDate();
+}
+
+function getTodayAppliedJobIds() {
+  const map = getAppliedJobsMap();
+  const todaySet = new Set();
+  for (const [id, ts] of Object.entries(map)) {
+    if (isDateToday(ts)) {
+      todaySet.add(id);
+    }
+  }
+  return todaySet;
+}
+
+function getTodayAppliedCount() {
+  return getTodayAppliedJobIds().size;
+}
+
+function markJobApplied(jobId) {
+  const map = getAppliedJobsMap();
+  map[jobId] = Date.now();
+  saveAppliedJobsMap(map);
+  state.appliedJobIds.add(jobId);
+}
+
+function getReportedJobIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(STORAGE_KEYS.REPORTED) || '[]'));
+  } catch { return new Set(); }
+}
+
+function getProPass() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.PRO_PASS);
+    if (!raw) return null;
+    const pass = JSON.parse(raw);
+    if (pass && pass.expiresAt && Date.now() < pass.expiresAt) {
+      return pass;
+    }
+    return null;
+  } catch { return null; }
+}
+
+function isUserSubscribed() {
+  return getProPass() !== null;
+}
+
+const state = {
+  allJobs: [],
+  filteredJobs: [],
+  scopeFilter: 'india', // 'india' | 'all'
+  activeTrackerTab: 'all', // 'all' | 'saved' | 'applied'
+  savedJobIds: getSavedJobIds(),
+  appliedJobIds: getAppliedJobIds(),
+  reportedJobIds: getReportedJobIds(),
+  activeRoleFilter: 'all',
+  searchQuery: '',
+  directAtsOnly: false,
+  indiaLocalOnly: false,
+  remoteOnly: false,
+  expFilter: 'all',
+  levelFilter: 'all',
+  typeFilter: 'all',
+  sourceFilter: 'all',
+  companyFilter: 'all',
+  workplaceFilter: 'all',
+  cityFilter: 'all',
+  dateFilter: 'all',
+  sortBy: 'newest',
+  currentPage: 1,
+  itemsPerPage: 18,
+  selectedJob: null,
+};
+
+// DOM Elements
+const elements = {
+  jobGrid: document.getElementById('job-grid'),
+  loadingState: document.getElementById('loading-state'),
+  emptyState: document.getElementById('empty-state'),
+  searchInput: document.getElementById('search-input'),
+  clearSearchBtn: document.getElementById('clear-search-btn'),
+  filterPills: document.querySelectorAll('.filter-pill'),
+  directAtsCheckbox: document.getElementById('direct-ats-only'),
+  indiaLocalCheckbox: document.getElementById('india-local-only'),
+  remoteCheckbox: document.getElementById('remote-only'),
+  sortSelect: document.getElementById('sort-select'),
+  expSelect: document.getElementById('exp-select'),
+  levelSelect: document.getElementById('level-select'),
+  typeSelect: document.getElementById('type-select'),
+  sourceSelect: document.getElementById('source-select'),
+  companySelect: document.getElementById('company-select'),
+  companyFilterCol: document.getElementById('company-filter-col'),
+  workplaceSelect: document.getElementById('workplace-select'),
+  citySelect: document.getElementById('city-select'),
+  dateSelect: document.getElementById('date-select'),
+  scopeIndiaBtn: document.getElementById('scope-india-btn'),
+  scopeGlobalBtn: document.getElementById('scope-global-btn'),
+  // Tracker Tabs
+  trackerAllBtn: document.getElementById('tracker-all-btn'),
+  trackerSavedBtn: document.getElementById('tracker-saved-btn'),
+  trackerAppliedBtn: document.getElementById('tracker-applied-btn'),
+  savedCountBadge: document.getElementById('saved-count-badge'),
+  appliedCountBadge: document.getElementById('applied-count-badge'),
+  resultsCountBadge: document.getElementById('results-count-badge'),
+  headerCountBadge: document.getElementById('header-count-badge'),
+  resetFiltersBtn: document.getElementById('reset-filters-btn'),
+  refreshBtn: document.getElementById('refresh-btn'),
+  // Pagination Elements
+  paginationContainer: document.getElementById('pagination-container'),
+  paginationInfo: document.getElementById('pagination-info'),
+  pageStart: document.getElementById('page-start'),
+  pageEnd: document.getElementById('page-end'),
+  pageTotal: document.getElementById('page-total'),
+  paginationButtons: document.getElementById('pagination-buttons'),
+  itemsPerPageSelect: document.getElementById('items-per-page'),
+  // Modal Elements
+  jobModal: document.getElementById('job-modal'),
+  modalCloseBtn: document.getElementById('modal-close-btn'),
+  modalTitle: document.getElementById('modal-title'),
+  modalCompany: document.getElementById('modal-company'),
+  modalLocation: document.getElementById('modal-location'),
+  modalPosted: document.getElementById('modal-posted'),
+  modalSource: document.getElementById('modal-source'),
+  modalBadgeAts: document.getElementById('modal-badge-ats'),
+  modalContent: document.getElementById('modal-content'),
+  modalSaveBtn: document.getElementById('modal-save-btn'),
+  modalAppliedBtn: document.getElementById('modal-applied-btn'),
+  modalReportBtn: document.getElementById('modal-report-btn'),
+  modalSaveIcon: document.getElementById('modal-save-icon'),
+  modalSaveText: document.getElementById('modal-save-text'),
+  modalAppliedIcon: document.getElementById('modal-applied-icon'),
+  modalAppliedText: document.getElementById('modal-applied-text'),
+  modalApplyBtn: document.getElementById('modal-apply-btn'),
+  modalCopyBtn: document.getElementById('modal-copy-btn'),
+  modalPrepCompany: document.getElementById('modal-prep-company'),
+  modalWhatsappBtn: document.getElementById('modal-whatsapp-btn'),
+  // Employer Feature Selectors
+  employerModal: document.getElementById('employer-modal'),
+  employerPostBtn: document.getElementById('employer-post-btn'),
+  employerModalCloseBtn: document.getElementById('employer-modal-close-btn'),
+  employerJobForm: document.getElementById('employer-job-form'),
+  // Toast
+  toast: document.getElementById('toast'),
+  toastMessage: document.getElementById('toast-message'),
+  // Schema hook
+  schemaScript: document.getElementById('job-posting-schema'),
+};
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+
+async function fetchJobs() {
+  setLoading(true);
+  try {
+    let data = null;
+
+    // 1. Check if jobs are preloaded via window.JOBS_DATA
+    if (window.JOBS_DATA && Array.isArray(window.JOBS_DATA) && window.JOBS_DATA.length > 0) {
+      data = window.JOBS_DATA;
+    }
+
+    // 2. If not preloaded, attempt fetch
+    if (!data || data.length === 0) {
+      const paths = [
+        'jobs_latest.json',
+        '/jobs_latest.json',
+        '../output/jobs_latest.json',
+        '/output/jobs_latest.json'
+      ];
+
+      for (const p of paths) {
+        try {
+          const res = await fetch(p);
+          if (res.ok) {
+            const fetched = await res.json();
+            if (Array.isArray(fetched) && fetched.length > 0) {
+              data = fetched;
+              break;
+            }
+          }
+        } catch (err) {
+          // ignore network or CORS errors on fallback
+        }
+      }
+    }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error('Could not load jobs dataset.');
+    }
+
+    state.allJobs = data;
+    elements.headerCountBadge.textContent = `${data.length} verified jobs`;
+    updateTrackerCounters();
+    updateQuotaUI();
+    populateSourceDropdown(data);
+    updateCompanyOptions();
+    applyFilters();
+    updateSchemaOrgJsonLd(state.allJobs);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    elements.jobGrid.innerHTML = `
+      <div class="col-span-full p-8 bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 text-center">
+        <p class="font-bold text-lg mb-2">No jobs loaded yet</p>
+        <p class="text-sm text-amber-700 max-w-md mx-auto mb-4">
+          Please run the aggregator backend once to generate latest jobs:
+        </p>
+        <code class="px-3 py-1.5 bg-white rounded border border-amber-300 font-mono text-xs">
+          python -m aggregator.main --india
+        </code>
+      </div>
+    `;
+    elements.resultsCountBadge.textContent = '0 jobs';
+  } finally {
+    setLoading(false);
+  }
+}
+
+function populateSourceDropdown(jobs) {
+  if (!elements.sourceSelect) return;
+  const currentVal = elements.sourceSelect.value;
+  const sources = Array.from(new Set(jobs.map(j => j.source).filter(Boolean))).sort();
+  elements.sourceSelect.innerHTML = '<option value="all">All Sources</option>' +
+    sources.map(s => {
+      const label = s === 'CompanyATS' ? 'Direct Company ATS 🎯' : s;
+      return `<option value="${escapeHtml(s)}">${escapeHtml(label)}</option>`;
+    }).join('');
+  if (sources.includes(currentVal)) {
+    elements.sourceSelect.value = currentVal;
+  }
+}
+
+function updateCompanyOptions() {
+  if (!elements.companySelect) return;
+  const currentVal = state.companyFilter;
+  let relevantJobs = state.allJobs;
+
+  if (state.sourceFilter !== 'all') {
+    relevantJobs = state.allJobs.filter(j => (j.source || '').toLowerCase() === state.sourceFilter.toLowerCase());
+  }
+
+  const companies = Array.from(
+    new Set(relevantJobs.map(j => (j.company || '').trim()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  elements.companySelect.innerHTML = `<option value="all">All Companies (${companies.length})</option>` +
+    companies.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+
+  if (companies.includes(currentVal)) {
+    elements.companySelect.value = currentVal;
+  } else {
+    state.companyFilter = 'all';
+    elements.companySelect.value = 'all';
+  }
+
+  // Highlight company dropdown when CompanyATS is selected
+  if (elements.companyFilterCol) {
+    if (state.sourceFilter === 'CompanyATS') {
+      elements.companyFilterCol.classList.add('ring-2', 'ring-brand-500', 'bg-brand-50/50', 'rounded-xl', 'p-1', 'transition-all');
+    } else {
+      elements.companyFilterCol.classList.remove('ring-2', 'ring-brand-500', 'bg-brand-50/50', 'rounded-xl', 'p-1', 'transition-all');
+    }
+  }
+}
+
+function setLoading(isLoading) {
+  if (isLoading) {
+    elements.loadingState.classList.remove('hidden');
+    elements.jobGrid.classList.add('hidden');
+    elements.emptyState.classList.add('hidden');
+  } else {
+    elements.loadingState.classList.add('hidden');
+    elements.jobGrid.classList.remove('hidden');
+  }
+}
+
+// ============================================================
+// FILTERING & SEARCH PIPELINE
+// ============================================================
+
+function applyFilters() {
+  const query = state.searchQuery.toLowerCase().trim();
+  const role = state.activeRoleFilter;
+
+  let results = state.allJobs.filter(job => {
+    // 0a. Exclude user-reported closed / expired jobs
+    if (state.reportedJobIds.has(job.job_id)) {
+      return false;
+    }
+
+    // 0b. Personal Tracker Tabs: Saved vs Applied vs All
+    if (state.activeTrackerTab === 'saved') {
+      if (!state.savedJobIds.has(job.job_id)) return false;
+    } else if (state.activeTrackerTab === 'applied') {
+      if (!state.appliedJobIds.has(job.job_id)) return false;
+    }
+
+    // 0c. Scope Filter: India & Global Remote (default) vs All Worldwide
+    if (state.scopeFilter === 'india' && state.activeTrackerTab === 'all') {
+      if (job.is_india_eligible === false) {
+        return false;
+      }
+    }
+
+    // 1. Text Search across Title, Company, Description, Location
+    if (query) {
+      const titleMatch = (job.title || '').toLowerCase().includes(query);
+      const companyMatch = (job.company || '').toLowerCase().includes(query);
+      const locMatch = (job.location || '').toLowerCase().includes(query);
+      const descMatch = (job.description || '').toLowerCase().includes(query);
+      if (!titleMatch && !companyMatch && !locMatch && !descMatch) {
+        return false;
+      }
+    }
+
+    // 2. Role Category Quick Pills
+    if (role !== 'all') {
+      const title = (job.title || '').toLowerCase();
+      if (role === 'qa') {
+        const isQA = /\b(qa|quality\s+assurance|tester|testing|sdet|test\s+engineer|automation)\b/i.test(title);
+        if (!isQA) return false;
+      } else if (role === 'engineer') {
+        const isDev = /\b(engineer|developer|frontend|backend|fullstack|software|programmer)\b/i.test(title);
+        if (!isDev) return false;
+      } else if (role === 'devops') {
+        const isDevOps = /\b(devops|cloud|sre|reliability|infrastructure|aws|k8s|kubernetes|sysadmin)\b/i.test(title);
+        if (!isDevOps) return false;
+      } else if (role === 'data') {
+        const isData = /\b(data|ai|machine\s+learning|ml|analyst|analytics|scientist)\b/i.test(title);
+        if (!isData) return false;
+      } else if (role === 'support') {
+        const isSupport = /\b(support|service|operations|coordinator|success|specialist|ops)\b/i.test(title);
+        if (!isSupport) return false;
+      }
+    }
+
+    // 3. Dropdown: Experience
+    if (state.expFilter !== 'all') {
+      const text = `${job.title} ${job.description} ${job.experience || ''}`.toLowerCase();
+      if (state.expFilter === 'entry') {
+        const isEntry = /\b(0\s*[-–to]\s*1|0\s*\+\s*years?|1\s*year|entry|fresher|graduate|intern|junior)\b/i.test(text);
+        if (!isEntry) return false;
+      } else if (state.expFilter === 'junior') {
+        const isJunior = /\b(1\s*[-–to]\s*3|2\s*\+?\s*years?|3\s*years?|junior|jr)\b/i.test(text);
+        if (!isJunior) return false;
+      } else if (state.expFilter === 'mid') {
+        const isMid = /\b(3\s*[-–to]\s*5|4\s*\+?\s*years?|5\s*years?|mid[- ]level|intermediate)\b/i.test(text);
+        if (!isMid) return false;
+      } else if (state.expFilter === 'senior') {
+        const isSenior = /\b(5\s*\+\s*years?|[6-9]\s*\+?\s*years?|1\d\s*\+?\s*years?|senior|sr|lead|principal|staff|architect)\b/i.test(text);
+        if (!isSenior) return false;
+      }
+    }
+
+    // 4. Dropdown: Job Level / Seniority
+    if (state.levelFilter !== 'all') {
+      const title = (job.title || '').toLowerCase();
+      if (state.levelFilter === 'entry') {
+        if (!/\b(entry|junior|jr|intern|graduate|associate|trainee)\b/i.test(title)) return false;
+      } else if (state.levelFilter === 'mid') {
+        const isHigh = /\b(senior|sr|lead|principal|staff|head|director|vp|manager|chief)\b/i.test(title);
+        const isLow = /\b(entry|junior|jr|intern|graduate|associate)\b/i.test(title);
+        if (isHigh || isLow) return false;
+      } else if (state.levelFilter === 'senior') {
+        if (!/\b(senior|sr|lead|principal|staff|architect)\b/i.test(title)) return false;
+      } else if (state.levelFilter === 'manager') {
+        if (!/\b(manager|director|head|vp|chief)\b/i.test(title)) return false;
+      }
+    }
+
+    // 5. Dropdown: Job Type / Employment
+    if (state.typeFilter !== 'all') {
+      const emp = `${job.employment_type || ''} ${job.title || ''} ${job.description || ''}`.toLowerCase();
+      if (state.typeFilter === 'full-time') {
+        if (!emp.includes('full-time') && !emp.includes('full time')) return false;
+      } else if (state.typeFilter === 'part-time') {
+        if (!emp.includes('part-time') && !emp.includes('part time')) return false;
+      } else if (state.typeFilter === 'contract') {
+        if (!emp.includes('contract') && !emp.includes('freelance') && !emp.includes('contractor')) return false;
+      } else if (state.typeFilter === 'internship') {
+        if (!emp.includes('intern') && !emp.includes('internship')) return false;
+      }
+    }
+
+    // 6. Dropdown: Source
+    if (state.sourceFilter !== 'all') {
+      if ((job.source || '').toLowerCase() !== state.sourceFilter.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // 7. Dropdown: Company
+    if (state.companyFilter !== 'all') {
+      if ((job.company || '').toLowerCase() !== state.companyFilter.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // 8. Dropdown: Workplace / Remote Type
+    if (state.workplaceFilter !== 'all') {
+      const remoteType = (job.remote_type || '').toLowerCase();
+      const loc = (job.location || '').toLowerCase();
+      if (state.workplaceFilter === 'remote') {
+        if (remoteType !== 'remote' && !loc.includes('remote') && !loc.includes('worldwide') && !loc.includes('anywhere')) {
+          return false;
+        }
+      } else if (state.workplaceFilter === 'hybrid') {
+        if (remoteType !== 'hybrid' && !loc.includes('hybrid')) return false;
+      } else if (state.workplaceFilter === 'onsite') {
+        if (remoteType !== 'on-site' && remoteType !== 'onsite') return false;
+      }
+    }
+
+    // 9. Direct ATS Only Toggle
+    if (state.directAtsOnly && !job.is_direct_ats) {
+      return false;
+    }
+
+    // 10. India Location Local Only Toggle
+    if (state.indiaLocalOnly) {
+      const loc = (job.location || '').toLowerCase();
+      const country = (job.country || '').toLowerCase();
+      const isIndiaCity = /\b(india|kerala|kochi|bengaluru|bangalore|pune|mumbai|delhi|hyderabad|noida|gurgaon|chennai)\b/i.test(loc);
+      if (!isIndiaCity && country !== 'india') {
+        return false;
+      }
+    }
+
+    // 11. Remote Worldwide Only Toggle
+    if (state.remoteOnly) {
+      const loc = (job.location || '').toLowerCase();
+      const isWorldwide = /\b(worldwide|anywhere|global|all locations|everywhere|remote)\b/i.test(loc);
+      if (!isWorldwide && job.remote_type !== 'Remote') {
+        return false;
+      }
+    }
+
+    // 12. City / Location Dropdown
+    if (state.cityFilter !== 'all') {
+      const loc = (job.location || '').toLowerCase();
+      const country = (job.country || '').toLowerCase();
+      if (state.cityFilter === 'bengaluru') {
+        if (!loc.includes('bengaluru') && !loc.includes('bangalore')) return false;
+      } else if (state.cityFilter === 'pune') {
+        if (!loc.includes('pune')) return false;
+      } else if (state.cityFilter === 'hyderabad') {
+        if (!loc.includes('hyderabad')) return false;
+      } else if (state.cityFilter === 'mumbai') {
+        if (!loc.includes('mumbai') && !loc.includes('navi mumbai') && !loc.includes('thane')) return false;
+      } else if (state.cityFilter === 'delhi') {
+        if (!loc.includes('delhi') && !loc.includes('noida') && !loc.includes('gurgaon') && !loc.includes('gurugram')) return false;
+      } else if (state.cityFilter === 'chennai') {
+        if (!loc.includes('chennai') && !loc.includes('madras')) return false;
+      } else if (state.cityFilter === 'kerala') {
+        if (!loc.includes('kochi') && !loc.includes('cochin') && !loc.includes('kerala') && !loc.includes('trivandrum')) return false;
+      } else if (state.cityFilter === 'ahmedabad') {
+        if (!loc.includes('ahmedabad') && !loc.includes('sanand') && !loc.includes('gj')) return false;
+      } else if (state.cityFilter === 'coimbatore') {
+        if (!loc.includes('coimbatore')) return false;
+      } else if (state.cityFilter === 'worldwide') {
+        if (!loc.includes('worldwide') && !loc.includes('anywhere') && job.remote_type !== 'Remote') return false;
+      } else if (state.cityFilter === 'us') {
+        if (country !== 'united states' && country !== 'us' && !loc.includes('united states') && !loc.includes(', us')) return false;
+      } else if (state.cityFilter === 'europe') {
+        if (country !== 'united kingdom' && country !== 'germany' && !loc.includes('uk') && !loc.includes('london') && !loc.includes('berlin')) return false;
+      }
+    }
+
+    // 13. Date Posted ("Freshness") Dropdown
+    if (state.dateFilter !== 'all') {
+      const maxDays = parseInt(state.dateFilter, 10);
+      if (job.posted_date) {
+        try {
+          const postedMs = new Date(job.posted_date).getTime();
+          const nowMs = new Date().getTime();
+          const ageDays = (nowMs - postedMs) / (1000 * 3600 * 24);
+          if (ageDays > maxDays) return false;
+        } catch (e) {}
+      }
+    }
+
+    return true;
+  });
+
+  // Sorting
+  if (state.sortBy === 'newest') {
+    results.sort((a, b) => new Date(b.posted_date || 0) - new Date(a.posted_date || 0));
+  } else if (state.sortBy === 'title') {
+    results.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  } else if (state.sortBy === 'company') {
+    results.sort((a, b) => (a.company || '').localeCompare(b.company || ''));
+  }
+
+  state.filteredJobs = results;
+  renderJobCards();
+}
+
+// ============================================================
+// UI RENDERING & PAGINATION
+// ============================================================
+
+function renderJobCards() {
+  const jobs = state.filteredJobs;
+  const total = jobs.length;
+  elements.resultsCountBadge.textContent = `${total} ${total === 1 ? 'job' : 'jobs'}`;
+
+  if (total === 0) {
+    elements.jobGrid.classList.add('hidden');
+    elements.emptyState.classList.remove('hidden');
+    if (elements.paginationContainer) elements.paginationContainer.classList.add('hidden');
+    return;
+  }
+
+  elements.jobGrid.classList.remove('hidden');
+  elements.emptyState.classList.add('hidden');
+
+  let paginated = jobs;
+  if (state.itemsPerPage !== 'all') {
+    const limit = parseInt(state.itemsPerPage, 10);
+    const totalPages = Math.ceil(total / limit) || 1;
+    if (state.currentPage > totalPages) state.currentPage = totalPages;
+    if (state.currentPage < 1) state.currentPage = 1;
+
+    const startIdx = (state.currentPage - 1) * limit;
+    const endIdx = Math.min(startIdx + limit, total);
+    paginated = jobs.slice(startIdx, endIdx);
+
+    if (elements.paginationContainer) {
+      elements.pageStart.textContent = startIdx + 1;
+      elements.pageEnd.textContent = endIdx;
+      elements.pageTotal.textContent = total;
+      renderPaginationButtons(totalPages);
+      elements.paginationContainer.classList.remove('hidden');
+    }
+  } else {
+    if (elements.paginationContainer) elements.paginationContainer.classList.add('hidden');
+  }
+
+  elements.jobGrid.innerHTML = paginated.map((job, idx) => {
+    const isDirectAts = job.is_direct_ats;
+    const directUrl = job.direct_apply_url || job.apply_url;
+    const location = job.location || 'Remote';
+    const posted = job.posted_date ? formatDate(job.posted_date) : 'Recently';
+    const cleanDesc = stripHtml(job.description || '');
+    const snippet = cleanDesc.length > 160 ? cleanDesc.substring(0, 160) + '...' : cleanDesc;
+    const isSaved = state.savedJobIds.has(job.job_id);
+    const isApplied = state.appliedJobIds.has(job.job_id);
+    const formattedSalary = formatSalaryWithLPA(job.salary);
+
+    const companyInitial = (job.company || 'C').charAt(0).toUpperCase();
+    const companyClean = (job.company || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const logoUrl = `https://www.google.com/s2/favicons?domain=${companyClean}.com&sz=64`;
+
+    let sponsoredCard = '';
+    if (idx > 0 && idx % 6 === 0) {
+      sponsoredCard = `
+        <article class="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 rounded-2xl border-2 border-indigo-200 p-6 flex flex-col justify-between shadow-2xs relative">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs">
+                🚀 CAREER ACCELERATOR
+              </span>
+              <span class="text-xs text-indigo-500 font-semibold">Recommended</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+              Is Your Resume Ready for Greenhouse & Lever ATS?
+            </h3>
+            <p class="text-xs font-semibold text-indigo-700 mt-1">Match keywords with top Indian tech employers</p>
+            <p class="mt-4 text-xs sm:text-sm text-slate-500 leading-relaxed">
+              75% of Indian tech resumes get filtered before HR ever sees them. Optimize your resume formatting to pass ATS screens automatically.
+            </p>
+          </div>
+          <div class="mt-6 pt-4 border-t border-indigo-100 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-slate-400">Sponsored • Resume.io</span>
+            <a href="https://resume.io/?ref=jobsforindia" target="_blank" rel="sponsored nofollow" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition">
+              Free ATS Scan ↗
+            </a>
+          </div>
+        </article>
+      `;
+    }
+
+    const jobCard = `
+      <article 
+        class="bg-white rounded-2xl border border-slate-200 hover:border-brand-300 p-6 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200 group relative"
+        aria-labelledby="job-title-${idx}"
+      >
+        <div>
+          <!-- Header Badges & Actions -->
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+              isDirectAts 
+                ? 'bg-emerald-100 text-emerald-800' 
+                : 'bg-slate-100 text-slate-700'
+            }">
+              ${isDirectAts ? '🎯 Direct Company ATS' : `📡 ${job.source}`}
+            </span>
+
+            <div class="flex items-center gap-1.5">
+              <button 
+                type="button" 
+                onclick="toggleSaveJob('${job.job_id}', event)" 
+                class="p-1 rounded-lg text-sm transition cursor-pointer ${
+                  isSaved 
+                    ? 'text-amber-500 hover:text-amber-600 bg-amber-50 border border-amber-200' 
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }" 
+                title="${isSaved ? 'Bookmarked (Click to remove)' : 'Save Job'}"
+                aria-label="${isSaved ? 'Remove bookmark' : 'Bookmark job'}"
+              >
+                ${isSaved ? '⭐' : '☆'}
+              </button>
+              <span class="text-xs text-slate-400 font-medium">
+                ${posted}
+              </span>
+            </div>
+          </div>
+
+          <!-- Company Avatar & Job Title -->
+          <div class="flex items-start gap-3 mt-1">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-brand-700 font-extrabold text-sm shrink-0 overflow-hidden shadow-2xs mt-0.5">
+              <img src="${logoUrl}" alt="${escapeHtml(job.company)}" class="w-6 h-6 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+              <span style="display:none;" class="text-xs font-black text-brand-700">${companyInitial}</span>
+            </div>
+            <div class="flex-grow min-w-0">
+              <h3 id="job-title-${idx}" class="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition leading-snug line-clamp-2">
+                ${escapeHtml(job.title)}
+              </h3>
+              <p class="text-sm font-medium text-slate-600 mt-0.5 flex items-center gap-1.5">
+                <span>${escapeHtml(job.company)}</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Badges Pill Row -->
+          <div class="flex flex-wrap items-center gap-1.5 mt-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+              📍 ${escapeHtml(location)}
+            </span>
+            ${job.remote_type ? `
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
+                🌐 ${escapeHtml(job.remote_type)}
+              </span>
+            ` : ''}
+            ${formattedSalary ? `
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200/60 font-medium">
+                💰 ${escapeHtml(formattedSalary)}
+              </span>
+            ` : ''}
+          </div>
+
+          <!-- Snippet Description -->
+          <p class="mt-4 text-xs sm:text-sm text-slate-500 line-clamp-3 leading-relaxed">
+            ${escapeHtml(snippet)}
+          </p>
+        </div>
+
+        <!-- Action CTAs -->
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <button 
+              type="button" 
+              onclick="openJobModal('${job.job_id}')"
+              class="text-xs sm:text-sm font-semibold text-slate-600 hover:text-brand-600 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition focus:ring-2 focus:ring-brand-500 cursor-pointer"
+              aria-label="View details for ${escapeHtml(job.title)}"
+            >
+              Details ↗
+            </button>
+            <button
+              type="button"
+              onclick="toggleAppliedJob('${job.job_id}', event)"
+              class="text-xs font-semibold px-2 py-1.5 rounded-lg border transition cursor-pointer flex items-center gap-1 ${
+                isApplied 
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' 
+                  : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
+              }"
+              title="${isApplied ? 'Application marked as submitted' : 'Mark as applied'}"
+            >
+              ${isApplied ? '✓' : '+'} Applied
+            </button>
+            <button
+              type="button"
+              onclick="shareOnWhatsApp('${escapeHtml(job.title).replace(/'/g, "\\'")}', '${escapeHtml(job.company).replace(/'/g, "\\'")}', '${escapeHtml(directUrl).replace(/'/g, "\\'")}', event)"
+              class="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 border border-emerald-200/70 transition cursor-pointer flex items-center justify-center text-xs"
+              title="Share job directly to WhatsApp"
+              aria-label="Share on WhatsApp"
+            >
+              💬
+            </button>
+          </div>
+
+          <button 
+            type="button" 
+            onclick="handleApplyClick('${job.job_id}', '${escapeHtml(directUrl)}', event)"
+            class="inline-flex items-center justify-center px-3.5 py-2 text-xs sm:text-sm font-bold text-white ${
+              isApplied ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-brand-600 hover:bg-brand-700'
+            } rounded-xl shadow-xs transition hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer"
+            aria-label="${isApplied ? 'Revisit application for' : 'Apply directly for'} ${escapeHtml(job.title)} at ${escapeHtml(job.company)}"
+          >
+            ${isApplied ? '✓ Applied ↗' : 'Apply ↗'}
+          </button>
+        </div>
+
+      </article>
+    `;
+
+    return sponsoredCard + jobCard;
+  }).join('');
+}
+
+function renderPaginationButtons(totalPages) {
+  if (!elements.paginationButtons) return;
+  if (totalPages <= 1) {
+    elements.paginationButtons.innerHTML = '';
+    return;
+  }
+
+  const current = state.currentPage;
+  const buttons = [];
+
+  // Prev Button
+  const prevDisabled = current === 1;
+  buttons.push(`
+    <button 
+      type="button" 
+      onclick="goToPage(${current - 1})" 
+      ${prevDisabled ? 'disabled' : ''} 
+      class="px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-semibold transition ${
+        prevDisabled 
+          ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed' 
+          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-brand-600 cursor-pointer'
+      }"
+      aria-label="Previous page"
+    >
+      ‹ Prev
+    </button>
+  `);
+
+  // Calculate page number list
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (current > 3) pages.push('...');
+    
+    const start = Math.max(2, current - 1);
+    const end = Math.min(totalPages - 1, current + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    if (current < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  pages.forEach(p => {
+    if (p === '...') {
+      buttons.push(`<span class="px-2 py-1 text-slate-400 text-xs">...</span>`);
+    } else {
+      const isActive = p === current;
+      buttons.push(`
+        <button 
+          type="button" 
+          onclick="goToPage(${p})" 
+          class="min-w-[32px] px-2.5 py-1.5 rounded-lg border text-xs sm:text-sm font-bold transition cursor-pointer ${
+            isActive 
+              ? 'bg-brand-600 border-brand-600 text-white shadow-xs' 
+              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-brand-600'
+          }"
+          aria-label="Page ${p}"
+          ${isActive ? 'aria-current="page"' : ''}
+        >
+          ${p}
+        </button>
+      `);
+    }
+  });
+
+  // Next Button
+  const nextDisabled = current === totalPages;
+  buttons.push(`
+    <button 
+      type="button" 
+      onclick="goToPage(${current + 1})" 
+      ${nextDisabled ? 'disabled' : ''} 
+      class="px-3 py-1.5 rounded-lg border text-xs sm:text-sm font-semibold transition ${
+        nextDisabled 
+          ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed' 
+          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-brand-600 cursor-pointer'
+      }"
+      aria-label="Next page"
+    >
+      Next ›
+    </button>
+  `);
+
+  elements.paginationButtons.innerHTML = buttons.join('');
+}
+
+window.goToPage = function(page) {
+  state.currentPage = page;
+  renderJobCards();
+  const target = document.getElementById('results-heading') || elements.jobGrid;
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ============================================================
+// MODAL / DETAILS DRAWER
+// ============================================================
+
+window.openJobModal = function(jobId) {
+  const job = state.allJobs.find(j => j.job_id === jobId);
+  if (!job) return;
+
+  state.selectedJob = job;
+  const isDirectAts = job.is_direct_ats;
+  const directUrl = job.direct_apply_url || job.apply_url;
+
+  elements.modalTitle.textContent = job.title || 'Untitled Role';
+  elements.modalCompany.textContent = job.company || 'Company';
+  elements.modalLocation.textContent = `📍 ${job.location || 'Remote'}`;
+  elements.modalPosted.textContent = `📅 ${job.posted_date ? formatDate(job.posted_date) : 'Recently'}`;
+  elements.modalSource.textContent = job.source || 'Aggregator';
+  elements.modalApplyBtn.href = directUrl;
+  elements.modalApplyBtn.onclick = (e) => {
+    e.preventDefault();
+    handleApplyClick(job.job_id, directUrl, e);
+  };
+
+  if (isDirectAts) {
+    elements.modalBadgeAts.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-2';
+    elements.modalBadgeAts.textContent = '🎯 Direct Company ATS Portal (Greenhouse / Lever)';
+    elements.modalApplyBtn.textContent = 'Apply on Company Site ↗';
+  } else {
+    elements.modalBadgeAts.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 mb-2';
+    elements.modalBadgeAts.textContent = `📡 Via ${job.source} Portal`;
+    elements.modalApplyBtn.textContent = 'Apply via Listing ↗';
+  }
+
+  // Render Description HTML safely with entity decoding & rich formatting
+  elements.modalContent.innerHTML = formatJobDescription(job.description);
+
+  if (elements.modalPrepCompany) {
+    elements.modalPrepCompany.textContent = job.company || 'this company';
+  }
+  if (elements.modalWhatsappBtn) {
+    elements.modalWhatsappBtn.onclick = (e) => {
+      e.stopPropagation();
+      window.shareOnWhatsApp(job.title, job.company, directUrl);
+    };
+  }
+
+  updateModalTrackerButtons();
+
+  elements.jobModal.classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+  elements.modalCloseBtn.focus();
+};
+
+function closeJobModal() {
+  elements.jobModal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+  state.selectedJob = null;
+}
+
+function updateModalTrackerButtons() {
+  if (!state.selectedJob) return;
+  const jobId = state.selectedJob.job_id;
+  const isSaved = state.savedJobIds.has(jobId);
+  const isApplied = state.appliedJobIds.has(jobId);
+
+  if (elements.modalSaveIcon) elements.modalSaveIcon.textContent = isSaved ? '⭐' : '☆';
+  if (elements.modalSaveText) elements.modalSaveText.textContent = isSaved ? 'Saved' : 'Save';
+  if (elements.modalSaveBtn) {
+    elements.modalSaveBtn.className = isSaved 
+      ? 'px-3.5 py-2.5 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-semibold text-amber-800 hover:bg-amber-100 transition shadow-2xs focus:ring-2 focus:ring-amber-500 flex items-center gap-1 cursor-pointer'
+      : 'px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer';
+  }
+
+  if (elements.modalAppliedIcon) elements.modalAppliedIcon.textContent = isApplied ? '✓' : '+';
+  if (elements.modalAppliedText) elements.modalAppliedText.textContent = isApplied ? 'Applied' : 'Mark Applied';
+  if (elements.modalAppliedBtn) {
+    elements.modalAppliedBtn.className = isApplied 
+      ? 'px-3.5 py-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs focus:ring-2 focus:ring-emerald-500 flex items-center gap-1 cursor-pointer'
+      : 'px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer';
+    elements.modalAppliedBtn.title = isApplied ? 'Application marked as submitted (permanent)' : 'Mark as applied';
+  }
+
+  // Update modal apply CTA button
+  if (elements.modalApplyBtn) {
+    if (isApplied) {
+      elements.modalApplyBtn.className = 'px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs hover:shadow focus:ring-2 focus:ring-emerald-500 cursor-pointer flex items-center gap-1.5';
+      elements.modalApplyBtn.textContent = '✓ Applied (Reopen ATS) ↗';
+    } else {
+      elements.modalApplyBtn.className = 'px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer flex items-center gap-1.5';
+      elements.modalApplyBtn.textContent = state.selectedJob.is_direct_ats ? 'Apply on Company Site ↗' : 'Apply via Listing ↗';
+    }
+  }
+}
+
+function updateTrackerCounters() {
+  const savedCount = state.savedJobIds.size;
+  const appliedCount = state.appliedJobIds.size;
+  if (elements.savedCountBadge) elements.savedCountBadge.textContent = savedCount;
+  if (elements.appliedCountBadge) elements.appliedCountBadge.textContent = appliedCount;
+}
+
+function updateQuotaUI() {
+  // Paywall removed: all features are free
+}
+
+function openUpgradeModal() {
+  // Paywall removed: upgrade modal no longer exists
+}
+
+function closeUpgradeModal() {
+  // Paywall removed
+}
+
+function updatePlanSelectionUI() {
+  // Paywall removed
+}
+
+window.handleApplyClick = function(jobId, directUrl, event) {
+  if (event) event.stopPropagation();
+
+  const alreadyApplied = state.appliedJobIds.has(jobId);
+
+  // Record application if new
+  if (!alreadyApplied) {
+    markJobApplied(jobId);
+    updateTrackerCounters();
+    renderJobCards();
+    updateModalTrackerButtons();
+    showToast('🎉 Direct ATS application launched and saved in tracker! ✓');
+  } else {
+    showToast('Opening official ATS portal (already marked as applied)... ↗');
+  }
+
+  // Open the official ATS portal in a new window/tab
+  window.open(directUrl, '_blank', 'noopener,noreferrer');
+};
+
+function setTrackerTab(tab) {
+  state.activeTrackerTab = tab;
+
+  if (elements.trackerAllBtn) {
+    elements.trackerAllBtn.className = tab === 'all' 
+      ? 'px-2.5 py-1 rounded-lg bg-white text-slate-900 font-bold shadow-2xs transition' 
+      : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
+  }
+  if (elements.trackerSavedBtn) {
+    elements.trackerSavedBtn.className = tab === 'saved'
+      ? 'px-2.5 py-1 rounded-lg bg-white text-amber-800 font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer'
+      : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer';
+  }
+  if (elements.trackerAppliedBtn) {
+    elements.trackerAppliedBtn.className = tab === 'applied'
+      ? 'px-2.5 py-1 rounded-lg bg-white text-emerald-800 font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer'
+      : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer';
+  }
+
+  state.currentPage = 1;
+  applyFilters();
+}
+
+window.toggleSaveJob = function(jobId, event) {
+  if (event) event.stopPropagation();
+  if (state.savedJobIds.has(jobId)) {
+    state.savedJobIds.delete(jobId);
+    showToast('Removed from saved bookmarks');
+  } else {
+    state.savedJobIds.add(jobId);
+    showToast('Saved to your bookmarks! ⭐');
+  }
+  localStorage.setItem(STORAGE_KEYS.SAVED, JSON.stringify([...state.savedJobIds]));
+  updateTrackerCounters();
+  if (state.activeTrackerTab === 'saved') {
+    applyFilters(false);
+  } else {
+    renderJobCards();
+  }
+  updateModalTrackerButtons();
+};
+
+window.toggleAppliedJob = function(jobId, event) {
+  if (event) event.stopPropagation();
+
+  // Once marked as applied, status permanently stays applied (cannot revert back)
+  if (state.appliedJobIds.has(jobId)) {
+    showToast('✓ This job is already marked as applied in your tracker!');
+    return;
+  }
+
+  markJobApplied(jobId);
+  updateTrackerCounters();
+
+  if (state.activeTrackerTab === 'applied') {
+    applyFilters(false);
+  } else {
+    renderJobCards();
+  }
+  updateModalTrackerButtons();
+  showToast('🎉 Marked as Applied! ✓');
+};
+
+window.reportJobClosed = function(jobId) {
+  if (!confirm('Report this job posting as closed or expired? It will be hidden from your feed.')) return;
+  state.reportedJobIds.add(jobId);
+  localStorage.setItem(STORAGE_KEYS.REPORTED, JSON.stringify([...state.reportedJobIds]));
+  showToast('Thank you! Job reported and hidden.');
+  closeJobModal();
+  applyFilters(false);
+};
+
+function formatSalaryWithLPA(salaryStr) {
+  if (!salaryStr) return null;
+  const s = String(salaryStr).trim();
+  if (!s) return null;
+
+  // Already in LPA / INR
+  if (/\b(lpa|inr|₹|lakhs?)\b/i.test(s)) {
+    return s;
+  }
+
+  // USD Conversion (1 USD ≈ 84 INR)
+  if (/\$|\busd\b/i.test(s)) {
+    const isHourly = /\/(hr|hour)\b/i.test(s);
+    const matches = [];
+    const numRegex = /(\d+(?:[.,]\d+)?)\s*(k|thousand|m|million)?/gi;
+    let match;
+    while ((match = numRegex.exec(s)) !== null) {
+      let val = parseFloat(match[1].replace(/,/g, ''));
+      const unit = (match[2] || '').toLowerCase();
+      if (unit === 'k' || unit === 'thousand') val *= 1000;
+      else if (unit === 'm' || unit === 'million') val *= 1000000;
+      if (isHourly) val *= 2000;
+      if (val >= 10000) {
+        const lpa = Math.round((val * 84) / 100000);
+        matches.push(lpa);
+      }
+    }
+    if (matches.length === 1) {
+      return `${s} (≈ ₹${matches[0]} LPA)`;
+    } else if (matches.length >= 2) {
+      return `${s} (≈ ₹${Math.min(matches[0], matches[1])} - ${Math.max(matches[0], matches[1])} LPA)`;
+    }
+  }
+
+  // EUR Conversion (1 EUR ≈ 91 INR)
+  if (/€|\beur\b/i.test(s)) {
+    const matches = [];
+    const numRegex = /(\d+(?:[.,]\d+)?)\s*(k|thousand)?/gi;
+    let match;
+    while ((match = numRegex.exec(s)) !== null) {
+      let val = parseFloat(match[1].replace(/,/g, ''));
+      const unit = (match[2] || '').toLowerCase();
+      if (unit === 'k' || unit === 'thousand') val *= 1000;
+      if (val >= 10000) {
+        const lpa = Math.round((val * 91) / 100000);
+        matches.push(lpa);
+      }
+    }
+    if (matches.length === 1) {
+      return `${s} (≈ ₹${matches[0]} LPA)`;
+    } else if (matches.length >= 2) {
+      return `${s} (≈ ₹${Math.min(matches[0], matches[1])} - ${Math.max(matches[0], matches[1])} LPA)`;
+    }
+  }
+
+  return s;
+}
+
+// ============================================================
+// SCHEMA.ORG GOOGLE JOBS ORGANIC SEO MICRODATA
+// ============================================================
+
+function updateSchemaOrgJsonLd(jobs) {
+  if (!jobs || jobs.length === 0) return;
+
+  // Generate Google Jobs schema microdata for top 20 indexed jobs
+  const jobPostings = jobs.slice(0, 20).map(job => ({
+    "@context": "https://schema.org/",
+    "@type": "JobPosting",
+    "title": job.title,
+    "description": stripHtml(job.description || '').substring(0, 500),
+    "identifier": {
+      "@type": "PropertyValue",
+      "name": job.company,
+      "value": job.job_id
+    },
+    "datePosted": job.posted_date || new Date().toISOString().split('T')[0],
+    "employmentType": job.employment_type ? job.employment_type.toUpperCase().replace('-', '_') : "FULL_TIME",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": job.company
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "IN"
+      }
+    },
+    "jobLocationType": job.remote_type === "Remote" ? "TELECOMMUTE" : undefined,
+    "applicantLocationRequirements": {
+      "@type": "Country",
+      "name": "India"
+    },
+    "directApply": Boolean(job.is_direct_ats)
+  }));
+
+  elements.schemaScript.textContent = JSON.stringify(jobPostings);
+}
+
+// ============================================================
+// HELPERS & UTILITIES
+// ============================================================
+
+function formatJobDescription(desc) {
+  if (!desc) return '<p class="text-slate-500 italic">No description provided.</p>';
+
+  let formatted = String(desc);
+  // Decode HTML entities if present (e.g. &lt;h1&gt; -> <h1>, &amp; -> &)
+  if (formatted.includes('&lt;') || formatted.includes('&gt;') || formatted.includes('&amp;') || formatted.includes('&quot;')) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = formatted;
+    formatted = txt.value;
+  }
+
+  // If plain text with newlines (e.g. from Lever or Adzuna), convert newlines to paragraphs
+  const hasHtml = /<[a-z][\s\S]*>/i.test(formatted);
+  if (!hasHtml) {
+    return formatted
+      .split(/\n\s*\n/)
+      .map(p => `<p class="mb-3 text-slate-700 leading-relaxed">${p.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+  }
+
+  // Remove excessive repetitive break tags: <p><br><br></p>
+  formatted = formatted.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+  formatted = formatted.replace(/<p>(\s*<br\s*\/?>\s*)+<\/p>/gi, '');
+
+  return formatted;
+}
+
+function stripHtml(html) {
+  if (!html) return '';
+  let str = String(html);
+  if (str.includes('&lt;') || str.includes('&gt;') || str.includes('&amp;')) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = str;
+    str = txt.value;
+  }
+  const tmp = document.createElement('div');
+  tmp.innerHTML = str;
+  return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatDate(isoDate) {
+  try {
+    const d = new Date(isoDate);
+    return d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+  } catch {
+    return isoDate;
+  }
+}
+
+function showToast(msg) {
+  elements.toastMessage.textContent = msg;
+  elements.toast.classList.remove('hidden');
+  setTimeout(() => {
+    elements.toast.classList.add('hidden');
+  }, 3000);
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+
+// Debounced Search
+let debounceTimer;
+elements.searchInput.addEventListener('input', e => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    state.searchQuery = e.target.value;
+    elements.clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+    applyFilters();
+  }, 250);
+});
+
+elements.clearSearchBtn.addEventListener('click', () => {
+  elements.searchInput.value = '';
+  state.searchQuery = '';
+  elements.clearSearchBtn.classList.add('hidden');
+  applyFilters();
+});
+
+// Category Filter Pills
+elements.filterPills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    elements.filterPills.forEach(p => {
+      p.className = 'filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200';
+    });
+    pill.className = 'filter-pill active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-brand-600 text-white shadow-xs';
+    state.activeRoleFilter = pill.dataset.filter;
+    applyFilters();
+  });
+});
+
+// Attribute Toggles
+elements.directAtsCheckbox.addEventListener('change', e => {
+  state.directAtsOnly = e.target.checked;
+  applyFilters();
+});
+
+elements.indiaLocalCheckbox.addEventListener('change', e => {
+  state.indiaLocalOnly = e.target.checked;
+  applyFilters();
+});
+
+elements.remoteCheckbox.addEventListener('change', e => {
+  state.remoteOnly = e.target.checked;
+  applyFilters();
+});
+
+// Dropdown Selectors
+elements.expSelect.addEventListener('change', e => {
+  state.expFilter = e.target.value;
+  applyFilters();
+});
+
+elements.levelSelect.addEventListener('change', e => {
+  state.levelFilter = e.target.value;
+  applyFilters();
+});
+
+elements.typeSelect.addEventListener('change', e => {
+  state.typeFilter = e.target.value;
+  applyFilters();
+});
+
+elements.sourceSelect.addEventListener('change', e => {
+  state.sourceFilter = e.target.value;
+  state.companyFilter = 'all';
+  updateCompanyOptions();
+  applyFilters();
+});
+
+if (elements.companySelect) {
+  elements.companySelect.addEventListener('change', e => {
+    state.companyFilter = e.target.value;
+    applyFilters();
+  });
+}
+
+elements.workplaceSelect.addEventListener('change', e => {
+  state.workplaceFilter = e.target.value;
+  applyFilters();
+});
+
+if (elements.citySelect) {
+  elements.citySelect.addEventListener('change', e => {
+    state.cityFilter = e.target.value;
+    applyFilters();
+  });
+}
+
+if (elements.dateSelect) {
+  elements.dateSelect.addEventListener('change', e => {
+    state.dateFilter = e.target.value;
+    applyFilters();
+  });
+}
+
+function setScope(scope) {
+  state.scopeFilter = scope;
+  if (scope === 'india') {
+    if (elements.scopeIndiaBtn) {
+      elements.scopeIndiaBtn.className = 'px-2.5 py-1 rounded-lg bg-white text-brand-700 font-bold shadow-2xs transition';
+    }
+    if (elements.scopeGlobalBtn) {
+      elements.scopeGlobalBtn.className = 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+    }
+  } else {
+    if (elements.scopeIndiaBtn) {
+      elements.scopeIndiaBtn.className = 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+    }
+    if (elements.scopeGlobalBtn) {
+      elements.scopeGlobalBtn.className = 'px-2.5 py-1 rounded-lg bg-white text-brand-700 font-bold shadow-2xs transition';
+    }
+  }
+  applyFilters();
+}
+
+if (elements.scopeIndiaBtn) {
+  elements.scopeIndiaBtn.addEventListener('click', () => setScope('india'));
+}
+if (elements.scopeGlobalBtn) {
+  elements.scopeGlobalBtn.addEventListener('click', () => setScope('global'));
+}
+
+// Personal Tracker Tab Listeners
+if (elements.trackerAllBtn) {
+  elements.trackerAllBtn.addEventListener('click', () => setTrackerTab('all'));
+}
+if (elements.trackerSavedBtn) {
+  elements.trackerSavedBtn.addEventListener('click', () => setTrackerTab('saved'));
+}
+if (elements.trackerAppliedBtn) {
+  elements.trackerAppliedBtn.addEventListener('click', () => setTrackerTab('applied'));
+}
+
+// Pagination Items Per Page
+if (elements.itemsPerPageSelect) {
+  elements.itemsPerPageSelect.addEventListener('change', e => {
+    state.itemsPerPage = e.target.value;
+    state.currentPage = 1;
+    renderJobCards();
+  });
+}
+
+// Sort Select
+elements.sortSelect.addEventListener('change', e => {
+  state.sortBy = e.target.value;
+  applyFilters(false);
+});
+
+// Reset Button
+elements.resetFiltersBtn.addEventListener('click', () => {
+  state.searchQuery = '';
+  elements.searchInput.value = '';
+  state.activeRoleFilter = 'all';
+  state.expFilter = 'all';
+  state.levelFilter = 'all';
+  state.typeFilter = 'all';
+  state.sourceFilter = 'all';
+  state.companyFilter = 'all';
+  state.workplaceFilter = 'all';
+  state.cityFilter = 'all';
+  state.dateFilter = 'all';
+  state.directAtsOnly = false;
+  state.indiaLocalOnly = false;
+  state.remoteOnly = false;
+  state.currentPage = 1;
+  state.itemsPerPage = 18;
+
+  elements.expSelect.value = 'all';
+  elements.levelSelect.value = 'all';
+  elements.typeSelect.value = 'all';
+  elements.sourceSelect.value = 'all';
+  if (elements.companySelect) elements.companySelect.value = 'all';
+  elements.workplaceSelect.value = 'all';
+  if (elements.citySelect) elements.citySelect.value = 'all';
+  if (elements.dateSelect) elements.dateSelect.value = 'all';
+  if (elements.itemsPerPageSelect) elements.itemsPerPageSelect.value = '18';
+  elements.directAtsCheckbox.checked = false;
+  elements.indiaLocalCheckbox.checked = false;
+  elements.remoteCheckbox.checked = false;
+
+  setScope('india');
+  setTrackerTab('all');
+  updateCompanyOptions();
+
+  elements.filterPills.forEach((p, idx) => {
+    p.className = idx === 0 
+      ? 'filter-pill active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-brand-600 text-white shadow-xs'
+      : 'filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200';
+  });
+  applyFilters();
+});
+
+// Refresh Button
+elements.refreshBtn.addEventListener('click', () => {
+  fetchJobs();
+});
+
+// Modal Events
+if (elements.modalCloseBtn) {
+  elements.modalCloseBtn.addEventListener('click', closeJobModal);
+}
+if (elements.jobModal) {
+  elements.jobModal.addEventListener('click', e => {
+    if (e.target === elements.jobModal) closeJobModal();
+  });
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && elements.jobModal && !elements.jobModal.classList.contains('hidden')) {
+    closeJobModal();
+  }
+});
+
+if (elements.modalSaveBtn) {
+  elements.modalSaveBtn.addEventListener('click', () => {
+    if (state.selectedJob) toggleSaveJob(state.selectedJob.job_id);
+  });
+}
+
+if (elements.modalAppliedBtn) {
+  elements.modalAppliedBtn.addEventListener('click', () => {
+    if (state.selectedJob) toggleAppliedJob(state.selectedJob.job_id);
+  });
+}
+
+if (elements.modalReportBtn) {
+  elements.modalReportBtn.addEventListener('click', () => {
+    if (state.selectedJob) reportJobClosed(state.selectedJob.job_id);
+  });
+}
+
+// Copy Application Link
+elements.modalCopyBtn.addEventListener('click', () => {
+  if (!state.selectedJob) return;
+  const url = state.selectedJob.direct_apply_url || state.selectedJob.apply_url;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Direct application link copied to clipboard!');
+  }).catch(() => {
+    showToast('Failed to copy link.');
+  });
+});
+
+// Paywall removed: all features are free and unlimited
+
+// ============================================================
+// VIRAL WHATSAPP SHARING
+// ============================================================
+
+window.shareOnWhatsApp = function(title, company, url, event) {
+  if (event) event.stopPropagation();
+  const text = `🚨 *Direct Tech Opening (No Middlemen)*\n\n🎯 *Role:* ${title}\n🏢 *Company:* ${company}\n\n👉 Apply directly on company ATS portal:\n${url}\n\nFound via JobsForIndia — verified tech jobs for Indian candidates! 🇮🇳`;
+  const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  window.open(shareUrl, '_blank', 'noopener,noreferrer');
+  showToast('Opening WhatsApp to share job... 💬');
+};
+
+// ============================================================
+// EMPLOYER FEATURED JOB SUBMISSION
+// ============================================================
+
+window.openEmployerModal = function() {
+  if (!elements.employerModal) return;
+  elements.employerModal.classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+  const compInput = document.getElementById('emp-company-name');
+  if (compInput) compInput.focus();
+};
+
+window.closeEmployerModal = function() {
+  if (!elements.employerModal) return;
+  elements.employerModal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+};
+
+window.submitEmployerJob = function() {
+  const companyEl = document.getElementById('emp-company-name');
+  const titleEl = document.getElementById('emp-job-title');
+  const locEl = document.getElementById('emp-location');
+  const salaryEl = document.getElementById('emp-salary');
+  const urlEl = document.getElementById('emp-apply-url');
+  const emailEl = document.getElementById('emp-email');
+
+  const company = companyEl ? companyEl.value.trim() : '';
+  const title = titleEl ? titleEl.value.trim() : '';
+  const location = locEl ? locEl.value.trim() : 'India / Remote';
+  const salary = salaryEl ? salaryEl.value.trim() : null;
+  const applyUrl = urlEl ? urlEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+
+  if (!company || !title || !applyUrl) {
+    showToast('Please fill in Company Name, Job Title, and Apply URL.');
+    return;
+  }
+
+  const newFeaturedJob = {
+    job_id: 'featured_' + Date.now(),
+    title: title,
+    company: company,
+    location: location,
+    salary: salary || null,
+    apply_url: applyUrl,
+    direct_apply_url: applyUrl,
+    source: 'Featured Employer ⭐',
+    posted_date: new Date().toISOString().split('T')[0],
+    is_direct_ats: true,
+    is_india_eligible: true,
+    description: `<h3>Featured Position by ${escapeHtml(company)}</h3><p>Verified hiring priority opening. Recruiter contact: ${escapeHtml(email)}.</p><p>Apply directly on official careers site.</p>`
+  };
+
+  // Prepend to allJobs so it sits at the very top of the board!
+  state.allJobs.unshift(newFeaturedJob);
+  closeEmployerModal();
+  if (elements.employerJobForm) elements.employerJobForm.reset();
+  applyFilters();
+  showToast('🎉 Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
+};
+
+// Employer Modal Listeners
+if (elements.employerPostBtn) {
+  elements.employerPostBtn.addEventListener('click', openEmployerModal);
+}
+if (elements.employerModalCloseBtn) {
+  elements.employerModalCloseBtn.addEventListener('click', closeEmployerModal);
+}
+if (elements.employerModal) {
+  elements.employerModal.addEventListener('click', e => {
+    if (e.target === elements.employerModal) closeEmployerModal();
+  });
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && elements.employerModal && !elements.employerModal.classList.contains('hidden')) {
+    closeEmployerModal();
+  }
+});
+
+// Boot App
+fetchJobs();
+

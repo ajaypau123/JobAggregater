@@ -1,0 +1,441 @@
+Build a Python-based Job Aggregation V1 system.
+
+IMPORTANT: This is only the first MVP. Do NOT build a website, dashboard, database, login system, payment system, recruiter system, AI agent, or user authentication.
+
+The only objective is:
+
+APPROVED/FREE JOB API SOURCES → COLLECT JOBS → NORMALIZE → VALIDATE → REMOVE DUPLICATES → EXPORT CSV
+
+### 1. Legal/source requirement
+
+The system must only collect jobs from sources whose API/feed terms permit the intended aggregation/use.
+
+Do NOT:
+
+* scrape websites that prohibit automated collection
+* bypass CAPTCHA
+* bypass authentication/login
+* bypass rate limits
+* bypass anti-bot protection
+* bypass paywalls
+* use proxies to circumvent restrictions
+* collect data from restricted sources
+* assume that a public webpage automatically permits scraping
+
+Create a source configuration containing:
+
+* source name
+* API/feed URL
+* permission status
+* enabled/disabled status
+* notes
+* rate limit if known
+
+Only sources with:
+
+permission_status = "APPROVED"
+
+and
+
+enabled = true
+
+may be queried.
+
+If a source cannot be confidently used for this aggregation purpose, mark it as REVIEW_REQUIRED and do not collect from it.
+
+### 2. Initial sources
+
+Start with free/approved job APIs.
+
+Prioritize:
+
+1. Arbeitnow API
+2. Adzuna API, if the applicable API terms permit this use
+3. Other genuinely free job APIs/feeds that explicitly permit this type of aggregation
+
+Do not add a source merely because it has a public endpoint.
+
+For every source, document:
+
+* source name
+* API documentation URL
+* usage/terms URL
+* whether an API key is required
+* known request limits
+* permission status
+* attribution requirements
+
+If an API requires credentials, use environment variables. Never hard-code API keys.
+
+### 3. Technology
+
+Use:
+
+* Python 3.11+
+* requests or httpx for HTTP requests
+* pandas for CSV generation
+* python-dotenv for environment variables
+* pytest for tests
+
+Keep dependencies minimal.
+
+Do not introduce unnecessary frameworks.
+
+### 4. Project structure
+
+Create:
+
+job-aggregator/
+
+```
+aggregator/
+    __init__.py
+    main.py
+
+    sources/
+        __init__.py
+        base.py
+        arbeitnow.py
+        adzuna.py
+
+    processing/
+        __init__.py
+        normalizer.py
+        validator.py
+        deduplicator.py
+
+    config/
+        sources.py
+
+output/
+
+tests/
+
+.env.example
+requirements.txt
+README.md
+.gitignore
+```
+
+### 5. Common job schema
+
+Every source must be converted into the same normalized structure.
+
+Use these fields:
+
+* job_id
+* title
+* company
+* location
+* country
+* remote_type
+* employment_type
+* experience
+* salary
+* description
+* apply_url
+* source
+* source_job_id
+* posted_date
+* collected_date
+* status
+
+Example:
+
+{
+"job_id": "generated-unique-id",
+"title": "QA Engineer",
+"company": "Example Company",
+"location": "Bangalore",
+"country": "India",
+"remote_type": "Hybrid",
+"employment_type": "Full-time",
+"experience": "2-4 years",
+"salary": null,
+"description": "Job description...",
+"apply_url": "https://example.com/job/123",
+"source": "Arbeitnow",
+"source_job_id": "123",
+"posted_date": "2026-10-08",
+"collected_date": "2026-10-08",
+"status": "active"
+}
+
+If a source does not provide a field, use null/empty value rather than inventing information.
+
+Do NOT use an LLM to guess missing information.
+
+### 6. Source connector architecture
+
+Create a common interface in:
+
+aggregator/sources/base.py
+
+Each source connector should provide a method similar to:
+
+collect_jobs()
+
+The method should return normalized or source-specific job records that can subsequently be passed through the common normalization pipeline.
+
+The architecture must make adding Source 3, Source 4, Source 5, etc. easy without modifying the core aggregation logic.
+
+### 7. Collection process
+
+When main.py runs:
+
+1. Load source configuration.
+2. Select only enabled + approved sources.
+3. Call each source connector.
+4. Collect all available jobs.
+5. Handle API errors without crashing the entire process.
+6. Record source-level statistics.
+7. Normalize all records.
+8. Validate records.
+9. Remove duplicates.
+10. Export the final CSV.
+
+One failed source must not prevent other sources from being processed.
+
+### 8. Validation
+
+Reject jobs that do not contain the minimum required information.
+
+Minimum required fields:
+
+* title
+* company
+* apply_url
+* source
+
+Validate:
+
+* apply_url is a valid HTTP/HTTPS URL
+* title is not empty
+* company is not empty
+* source is known
+* source_job_id should be retained when available
+* posted_date should be parsed when available
+
+Do not invent missing information.
+
+Keep rejected records in memory during the run and show rejection statistics in the terminal.
+
+### 9. Deduplication
+
+Implement deterministic deduplication first.
+
+Priority:
+
+1. Same source + source_job_id
+2. Same normalized apply_url
+3. Same normalized company + title + location
+
+Normalize values before comparison:
+
+* lowercase
+* trim whitespace
+* collapse repeated spaces
+* normalize obvious URL variations where safe
+
+Do NOT implement complicated AI similarity matching in V1.
+
+Do NOT accidentally merge two different jobs merely because their titles are similar.
+
+### 10. CSV output
+
+Create:
+
+output/jobs_YYYY_MM_DD.csv
+
+The CSV must contain:
+
+job_id
+title
+company
+location
+country
+remote_type
+employment_type
+experience
+salary
+description
+apply_url
+source
+source_job_id
+posted_date
+collected_date
+status
+
+Use UTF-8 encoding.
+
+Make the CSV compatible with Excel and Google Sheets.
+
+### 11. Terminal output
+
+When the program runs, show something similar to:
+
+# Job Aggregator V1
+
+Source: Arbeitnow
+Permission: APPROVED
+Collecting...
+Jobs received: 1247
+
+Source: Adzuna
+Permission: APPROVED
+Collecting...
+Jobs received: 8421
+
+## Processing
+
+Total collected: 9668
+Valid jobs: 9200
+Invalid jobs: 468
+Duplicates removed: 1843
+Final jobs: 7357
+
+CSV created:
+output/jobs_2026_10_08.csv
+
+Also show errors for individual sources without exposing API secrets.
+
+### 12. Configuration
+
+Use environment variables for secrets.
+
+Example .env:
+
+ARBEITNOW_API_URL=...
+ADZUNA_APP_ID=...
+ADZUNA_APP_KEY=...
+
+Never commit .env.
+
+Create .env.example with placeholder values.
+
+### 13. Error handling
+
+Implement:
+
+* HTTP timeout
+* retry for temporary errors
+* rate-limit handling
+* malformed API response handling
+* missing fields
+* invalid URLs
+* individual source failure isolation
+
+Do not aggressively retry a source when it returns a rate-limit response.
+
+Respect the documented API rate limits.
+
+### 14. Tests
+
+Create pytest tests for:
+
+* source configuration
+* normalization
+* URL validation
+* required-field validation
+* duplicate detection
+* whitespace normalization
+* empty API response
+* malformed job record
+* source failure
+* CSV generation
+
+Use mocked API responses in tests.
+
+Do NOT repeatedly call real APIs during automated tests.
+
+### 15. README
+
+Document:
+
+* project purpose
+* architecture
+* setup instructions
+* Python version
+* installation
+* environment variables
+* how to run
+* how to add a new source
+* source permission policy
+* CSV format
+* deduplication logic
+* limitations
+
+Include a clear section:
+
+"Source Compliance Policy"
+
+Explain that the system only collects from approved sources and does not bypass technical or contractual restrictions.
+
+### 16. Important scope restriction
+
+Do NOT build:
+
+* frontend
+* dashboard
+* database
+* Supabase integration
+* authentication
+* payments
+* user accounts
+* recruiter dashboard
+* candidate profiles
+* job applications
+* web scraping framework
+* CAPTCHA solving
+* proxy rotation
+* anti-bot bypass
+* autonomous web-search agent
+* LLM integration
+
+These belong to later versions.
+
+### 17. Future extensibility
+
+Design the code so that later we can add:
+
+Source 3
+Source 4
+Source 5
+...
+Source 100
+
+without rewriting the aggregation engine.
+
+Later versions may introduce:
+
+* scheduled collection
+* more APIs
+* permitted feeds
+* AI-based normalization
+* advanced duplicate detection
+* database storage
+* dashboard
+
+But do NOT implement those now.
+
+### 18. Definition of Done
+
+The project is complete only when:
+
+1. The application can successfully connect to at least one approved free job API.
+2. It collects real job records.
+3. Records are converted to the common schema.
+4. Invalid records are rejected.
+5. Duplicate records are removed.
+6. The final records are exported to a CSV.
+7. The CSV opens correctly in Excel/Google Sheets.
+8. API credentials are not hard-coded.
+9. One source failing does not stop other sources.
+10. Tests pass.
+11. README explains setup and source compliance.
+12. Adding another source requires only a new connector/configuration rather than rewriting the core pipeline.
+
+Before adding any new source, explicitly identify its API documentation and applicable usage/aggregation terms. If permission is unclear, do not enable that source.
+
+Build this as a clean, maintainable V1 rather than overengineering it.
+

@@ -1,0 +1,84 @@
+name: Auto Scrape Jobs & Deploy Dashboard
+
+on:
+  schedule:
+    # Runs every 6 hours automatically (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub web UI anytime
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "scrape-and-deploy"
+  cancel-in-progress: false
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Job Aggregator (India Eligible & Direct ATS)
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          ADZUNA_COUNTRIES: "in"
+        run: |
+          python -m aggregator.main --india
+
+      - name: Copy latest jobs feed into dashboard directory
+        run: |
+          cp output/jobs_latest.json dashboard/jobs_latest.json
+
+      - name: Commit & Push Updated Jobs and SQLite DB
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add output/jobs_latest.json output/jobs.db dashboard/jobs_latest.json
+          git commit -m "Auto-update job listings [skip ci]" || echo "No changes to commit"
+          git push
+
+  deploy-dashboard:
+    needs: scrape-and-update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Prepare Dashboard folder for GitHub Pages
+        run: |
+          # Ensure jobs_latest.json is inside dashboard/
+          if [ -f output/jobs_latest.json ]; then
+            cp output/jobs_latest.json dashboard/jobs_latest.json
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dashboard'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
