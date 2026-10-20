@@ -639,7 +639,7 @@ function renderJobCards() {
           </div>
           <div class="mt-6 pt-4 border-t border-indigo-100 flex items-center justify-between gap-2">
             <span class="text-[11px] text-slate-400">Sponsored • Resume.io</span>
-            <a href="https://resume.io/?ref=jobsforindia" target="_blank" rel="sponsored nofollow" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition">
+            <a href="https://resume.io/" target="_blank" rel="sponsored nofollow" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition">
               Free ATS Scan ↗
             </a>
           </div>
