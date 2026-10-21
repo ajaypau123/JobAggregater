@@ -342,7 +342,7 @@ def run(
             dashboard_dir = os.path.join(os.path.dirname(output_dir), "dashboard")
             if os.path.isdir(dashboard_dir):
                 # Prepare high-performance lightweight dataset for the browser
-                if india_only:
+                if india_eligible:
                     dash_jobs = [
                         _to_lightweight(j)
                         for j in cumulative_dataset
