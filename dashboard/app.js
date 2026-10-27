@@ -147,6 +147,7 @@ const elements = {
   searchInput: document.getElementById('search-input'),
   clearSearchBtn: document.getElementById('clear-search-btn'),
   filterPills: document.querySelectorAll('.filter-pill'),
+  roleSelect: document.getElementById('role-select'),
   directAtsCheckbox: document.getElementById('direct-ats-only'),
   indiaLocalCheckbox: document.getElementById('india-local-only'),
   remoteCheckbox: document.getElementById('remote-only'),
@@ -409,6 +410,12 @@ function applyFilters() {
       } else if (role === 'data') {
         const isData = /\b(data|ai|machine\s+learning|ml|analyst|analytics|scientist)\b/i.test(title);
         if (!isData) return false;
+      } else if (role === 'mobile') {
+        const isMobile = /\b(mobile|android|ios|flutter|react\s+native|swift|kotlin)\b/i.test(title);
+        if (!isMobile) return false;
+      } else if (role === 'design') {
+        const isDesign = /\b(design|designer|ui|ux|product\s+design|graphic)\b/i.test(title);
+        if (!isDesign) return false;
       } else if (role === 'support') {
         const isSupport = /\b(support|service|operations|coordinator|success|specialist|ops)\b/i.test(title);
         if (!isSupport) return false;
@@ -1304,13 +1311,43 @@ elements.clearSearchBtn.addEventListener('click', () => {
 elements.filterPills.forEach(pill => {
   pill.addEventListener('click', () => {
     elements.filterPills.forEach(p => {
-      p.className = 'filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200';
+      p.className = 'filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
     });
-    pill.className = 'filter-pill active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-brand-600 text-white shadow-xs';
+    pill.className = 'filter-pill active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
     state.activeRoleFilter = pill.dataset.filter;
+    if (elements.roleSelect) {
+      elements.roleSelect.value = state.activeRoleFilter;
+    }
     applyFilters();
   });
 });
+
+// Primary Job Role Dropdown Listener
+if (elements.roleSelect) {
+  elements.roleSelect.addEventListener('change', e => {
+    state.activeRoleFilter = e.target.value;
+    elements.filterPills.forEach(p => {
+      if (p.dataset.filter === state.activeRoleFilter) {
+        p.className = 'filter-pill active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
+      } else {
+        p.className = 'filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
+      }
+    });
+    applyFilters();
+  });
+}
+
+// Global Quick Trending Search Helper
+window.setQuickSearch = function(term) {
+  if (elements.searchInput) {
+    elements.searchInput.value = term;
+    state.searchQuery = term.toLowerCase().trim();
+    if (elements.clearSearchBtn) elements.clearSearchBtn.classList.remove('hidden');
+    applyFilters();
+    const heading = document.getElementById('results-heading');
+    if (heading) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
 
 // Attribute Toggles
 elements.directAtsCheckbox.addEventListener('change', e => {
@@ -1504,6 +1541,7 @@ elements.resetFiltersBtn.addEventListener('click', () => {
   state.currentPage = 1;
   state.itemsPerPage = 18;
 
+  if (elements.roleSelect) elements.roleSelect.value = 'all';
   elements.expSelect.value = 'all';
   elements.levelSelect.value = 'all';
   elements.typeSelect.value = 'all';
