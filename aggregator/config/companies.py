@@ -1,7 +1,7 @@
 """Directory of curated tech companies with official public ATS endpoints.
 
 Each company is verified to provide an unauthenticated, public REST API
-via Greenhouse, Lever, Ashby, or SmartRecruiters.
+via Greenhouse, Lever, Ashby, SmartRecruiters, or Workday.
 """
 
 from dataclasses import dataclass, field
@@ -19,6 +19,15 @@ class ATSCompany:
 DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     # ── Greenhouse ─────────────────────────────────────────────────────────────
     ATSCompany(name="InMobi", ats_type="greenhouse", slug="inmobi"),
+    ATSCompany(name="Groww", ats_type="greenhouse", slug="groww"),
+    ATSCompany(name="Slice", ats_type="greenhouse", slug="slice"),
+    ATSCompany(name="Deliveroo", ats_type="greenhouse", slug="deliveroo"),
+    ATSCompany(name="Zscaler", ats_type="greenhouse", slug="zscaler"),
+    ATSCompany(name="Samsara", ats_type="greenhouse", slug="samsara"),
+    ATSCompany(name="Toast", ats_type="greenhouse", slug="toast"),
+    ATSCompany(name="Instawork", ats_type="greenhouse", slug="instawork"),
+    ATSCompany(name="CommerceIQ", ats_type="greenhouse", slug="commerceiq"),
+    ATSCompany(name="Smartsheet", ats_type="greenhouse", slug="smartsheet"),
     ATSCompany(name="Databricks", ats_type="greenhouse", slug="databricks"),
     ATSCompany(name="Grafana Labs", ats_type="greenhouse", slug="grafanalabs"),
     ATSCompany(name="GitLab", ats_type="greenhouse", slug="gitlab"),
@@ -44,18 +53,56 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Gusto", ats_type="greenhouse", slug="gusto"),
     ATSCompany(name="Discord", ats_type="greenhouse", slug="discord"),
     ATSCompany(name="Checkr", ats_type="greenhouse", slug="checkr"),
-
-    # ── Lever ──────────────────────────────────────────────────────────────────
-    ATSCompany(name="Meesho", ats_type="lever", slug="meesho"),
-    ATSCompany(name="CRED", ats_type="lever", slug="cred"),
-    ATSCompany(name="Spotify", ats_type="lever", slug="spotify"),
-
-    # ── Greenhouse Additional MNCs ─────────────────────────────────────────────
     ATSCompany(name="Datadog", ats_type="greenhouse", slug="datadog"),
     ATSCompany(name="Rubrik", ats_type="greenhouse", slug="rubrik"),
     ATSCompany(name="Mozilla", ats_type="greenhouse", slug="mozilla"),
+    ATSCompany(name="Affirm", ats_type="greenhouse", slug="affirm"),
+    ATSCompany(name="Brex", ats_type="greenhouse", slug="brex"),
+    ATSCompany(name="Carta", ats_type="greenhouse", slug="carta"),
+    ATSCompany(name="Chime", ats_type="greenhouse", slug="chime"),
+    ATSCompany(name="SoFi", ats_type="greenhouse", slug="sofi"),
+    ATSCompany(name="Monzo", ats_type="greenhouse", slug="monzo"),
+    ATSCompany(name="N26", ats_type="greenhouse", slug="n26"),
+    ATSCompany(name="Wise", ats_type="greenhouse", slug="wise"),
+    ATSCompany(name="Adyen", ats_type="greenhouse", slug="adyen"),
+    ATSCompany(name="Duolingo", ats_type="greenhouse", slug="duolingo"),
+    ATSCompany(name="Gemini", ats_type="greenhouse", slug="gemini"),
+
+    # ── Lever ──────────────────────────────────────────────────────────────────
+    ATSCompany(name="Paytm", ats_type="lever", slug="paytm"),
+    ATSCompany(name="Meesho", ats_type="lever", slug="meesho"),
+    ATSCompany(name="CRED", ats_type="lever", slug="cred"),
+    ATSCompany(name="Porter", ats_type="lever", slug="porter"),
+    ATSCompany(name="Pocket FM", ats_type="lever", slug="pocketfm"),
+    ATSCompany(name="Zeta", ats_type="lever", slug="zeta"),
+    ATSCompany(name="Fi Money", ats_type="lever", slug="fi"),
+    ATSCompany(name="Acceldata", ats_type="lever", slug="acceldata"),
+    ATSCompany(name="JumpCloud", ats_type="lever", slug="jumpcloud"),
+    ATSCompany(name="Hevo Data", ats_type="lever", slug="hevodata"),
+    ATSCompany(name="Everbridge", ats_type="lever", slug="everbridge"),
+    ATSCompany(name="Endpoint Clinical", ats_type="lever", slug="endpointclinical"),
+    ATSCompany(name="Spotify", ats_type="lever", slug="spotify"),
 
     # ── Ashby ──────────────────────────────────────────────────────────────────
+    ATSCompany(name="Sarvam AI", ats_type="ashby", slug="sarvam"),
+    ATSCompany(name="SpotDraft", ats_type="ashby", slug="spotdraft"),
+    ATSCompany(name="Ema", ats_type="ashby", slug="ema"),
+    ATSCompany(name="AiPrise", ats_type="ashby", slug="aiprise"),
+    ATSCompany(name="Atlan", ats_type="ashby", slug="atlan"),
+    ATSCompany(name="Navi", ats_type="ashby", slug="navi"),
+    ATSCompany(name="Supabase", ats_type="ashby", slug="supabase"),
+    ATSCompany(name="Synthesia", ats_type="ashby", slug="synthesia"),
+    ATSCompany(name="ElevenLabs", ats_type="ashby", slug="elevenlabs"),
+    ATSCompany(name="Modal", ats_type="ashby", slug="modal"),
+    ATSCompany(name="Zapier", ats_type="ashby", slug="zapier"),
+    ATSCompany(name="Replit", ats_type="ashby", slug="replit"),
+    ATSCompany(name="OpenAI", ats_type="ashby", slug="openai"),
+    ATSCompany(name="Cohere", ats_type="ashby", slug="cohere"),
+    ATSCompany(name="LangChain", ats_type="ashby", slug="langchain"),
+    ATSCompany(name="PostHog", ats_type="ashby", slug="posthog"),
+    ATSCompany(name="Airbyte", ats_type="ashby", slug="airbyte"),
+    ATSCompany(name="Resend", ats_type="ashby", slug="resend"),
+    ATSCompany(name="Oyster", ats_type="ashby", slug="oyster"),
     ATSCompany(name="Linear", ats_type="ashby", slug="linear"),
     ATSCompany(name="Notion", ats_type="ashby", slug="notion"),
     ATSCompany(name="Cursor", ats_type="ashby", slug="cursor"),
@@ -66,6 +113,7 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Bosch Group", ats_type="smartrecruiters", slug="BoschGroup", extra_params={"country": "in"}),
     ATSCompany(name="Ubisoft", ats_type="smartrecruiters", slug="Ubisoft2", extra_params={"country": "in"}),
     ATSCompany(name="Avery Dennison", ats_type="smartrecruiters", slug="AveryDennison", extra_params={"country": "in"}),
+    ATSCompany(name="SGS", ats_type="smartrecruiters", slug="SGS", extra_params={"country": "in"}),
 ]
 
 
@@ -82,10 +130,10 @@ class WorkdayCompany:
 # Curated Big 4 & Global Tech MNCs using Workday with verified public endpoints
 DEFAULT_WORKDAY_COMPANIES: list[WorkdayCompany] = [
     WorkdayCompany(name="PwC", subdomain="pwc.wd3", tenant="pwc", site="Global_Experienced_Careers"),
+    WorkdayCompany(name="Target", subdomain="target.wd5", tenant="target", site="targetcareers", country_filter="India"),
     WorkdayCompany(name="Nvidia", subdomain="nvidia.wd5", tenant="nvidia", site="NVIDIAExternalCareerSite"),
     WorkdayCompany(name="Mastercard", subdomain="mastercard.wd1", tenant="mastercard", site="CorporateCareers"),
     WorkdayCompany(name="Adobe", subdomain="adobe.wd5", tenant="adobe", site="external_experienced"),
     WorkdayCompany(name="HP", subdomain="hp.wd5", tenant="hp", site="ExternalCareerSite"),
     WorkdayCompany(name="Autodesk", subdomain="autodesk.wd1", tenant="autodesk", site="Ext"),
 ]
-

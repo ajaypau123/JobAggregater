@@ -303,6 +303,9 @@ def run(
             cumulative_dataset = get_active_jobs_from_db(db_path=db_path)
             if not cumulative_dataset:
                 cumulative_dataset = full_dataset
+            else:
+                for cj in cumulative_dataset:
+                    cj["is_india_eligible"] = check_india(cj)
         except Exception as exc:
             logger.warning("Failed reading cumulative jobs from SQLite: %s", exc)
             cumulative_dataset = full_dataset
@@ -320,10 +323,27 @@ def run(
         if export_json:
             import json
             import re
+            import html
+
+            def _clean_str(s: str | None) -> str:
+                if not s:
+                    return ""
+                s = html.unescape(s)
+                if any(c in s for c in ("\u00e2", "\u00f0", "\u00c3")):
+                    try:
+                        fixed = s.encode("latin-1", errors="ignore").decode("utf-8", errors="ignore")
+                        if fixed and len(fixed) >= len(s) * 0.7:
+                            s = fixed
+                    except Exception:
+                        pass
+                return s
 
             def _to_lightweight(j: dict) -> dict:
                 c = dict(j)
-                desc = c.get("description") or ""
+                c["title"] = _clean_str(c.get("title"))
+                c["company"] = _clean_str(c.get("company"))
+                c["location"] = _clean_str(c.get("location"))
+                desc = _clean_str(c.get("description"))
                 text = re.sub(r"<[^>]+>", " ", desc)
                 text = re.sub(r"\s+", " ", text).strip()
                 if len(text) > 600:

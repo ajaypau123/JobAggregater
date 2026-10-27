@@ -82,10 +82,12 @@ def matches_experience(text: str | None, target_years: int = 2) -> bool:
 # ── India Eligibility Patterns ───────────────────────────────────────────────
 INDIAN_LOCATIONS = {
     "india", "kerala", "kochi", "cochin", "trivandrum", "thiruvananthapuram",
-    "bengaluru", "bangalore", "hyderabad", "pune", "mumbai", "delhi",
-    "noida", "gurgaon", "gurugram", "chennai", "kolkata", "ahmedabad",
-    "chandigarh", "jaipur", "indore", "calicut", "kozhikode", "mysore",
-    "coimbatore", "mysuru",
+    "bengaluru", "bangalore", "hyderabad", "pune", "mumbai", "delhi", "new delhi",
+    "ncr", "noida", "greater noida", "gurgaon", "gurugram", "chennai", "kolkata",
+    "ahmedabad", "chandigarh", "jaipur", "indore", "calicut", "kozhikode", "mysore",
+    "mysuru", "coimbatore", "bhubaneswar", "nagpur", "surat", "vadodara", "lucknow",
+    "karnataka", "telangana", "maharashtra", "tamil nadu", "haryana", "uttar pradesh",
+    "gujarat", "visakhapatnam", "vizag", "bhopal", "patna", "goa", "mangalore",
 }
 
 GLOBAL_REMOTE_TERMS = {
@@ -121,7 +123,9 @@ def is_india_eligible(job: dict) -> bool:
     remote_type = (job.get("remote_type") or "").strip()
 
     # 1. Direct India match in country or location
-    if country in ("india", "in"):
+    if country in ("india", "in", "ind"):
+        return True
+    if re.search(r",\s*in(?:\b|$)", location) or re.search(r"\bindia\b", location):
         return True
     for term in INDIAN_LOCATIONS:
         if re.search(rf"\b{re.escape(term)}\b", location):
