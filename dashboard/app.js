@@ -289,7 +289,7 @@ function populateSourceDropdown(jobs) {
   const sources = Array.from(new Set(jobs.map(j => j.source).filter(Boolean))).sort();
   elements.sourceSelect.innerHTML = '<option value="all">All Sources</option>' +
     sources.map(s => {
-      const label = s === 'CompanyATS' ? 'Direct Company ATS ðŸŽ¯' : s;
+      const label = s === 'CompanyATS' ? 'Direct Company ATS 🎯' : s;
       return `<option value="${escapeHtml(s)}">${escapeHtml(label)}</option>`;
     }).join('');
   if (sources.includes(currentVal)) {
@@ -405,13 +405,13 @@ function applyFilters() {
     if (state.expFilter !== 'all') {
       const text = `${job.title} ${job.description} ${job.experience || ''}`.toLowerCase();
       if (state.expFilter === 'entry') {
-        const isEntry = /\b(0\s*[-â€“to]\s*1|0\s*\+\s*years?|1\s*year|entry|fresher|graduate|intern|junior)\b/i.test(text);
+        const isEntry = /\b(0\s*[-–to]\s*1|0\s*\+\s*years?|1\s*year|entry|fresher|graduate|intern|junior)\b/i.test(text);
         if (!isEntry) return false;
       } else if (state.expFilter === 'junior') {
-        const isJunior = /\b(1\s*[-â€“to]\s*3|2\s*\+?\s*years?|3\s*years?|junior|jr)\b/i.test(text);
+        const isJunior = /\b(1\s*[-–to]\s*3|2\s*\+?\s*years?|3\s*years?|junior|jr)\b/i.test(text);
         if (!isJunior) return false;
       } else if (state.expFilter === 'mid') {
-        const isMid = /\b(3\s*[-â€“to]\s*5|4\s*\+?\s*years?|5\s*years?|mid[- ]level|intermediate)\b/i.test(text);
+        const isMid = /\b(3\s*[-–to]\s*5|4\s*\+?\s*years?|5\s*years?|mid[- ]level|intermediate)\b/i.test(text);
         if (!isMid) return false;
       } else if (state.expFilter === 'senior') {
         const isSenior = /\b(5\s*\+\s*years?|[6-9]\s*\+?\s*years?|1\d\s*\+?\s*years?|senior|sr|lead|principal|staff|architect)\b/i.test(text);
@@ -621,26 +621,26 @@ function renderJobCards() {
     let sponsoredCard = '';
     if (idx > 0 && idx % 6 === 0) {
       sponsoredCard = `
-        <article class="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white rounded-3xl border-2 border-indigo-200/90 p-6 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-indigo-400 transition-all relative">
+        <article class="bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 rounded-2xl border-2 border-indigo-200 p-6 flex flex-col justify-between shadow-2xs relative">
           <div>
             <div class="flex items-center justify-between gap-2 mb-3">
-              <span class="text-[11px] font-extrabold px-3 py-1 rounded-full bg-indigo-600 text-white shadow-xs tracking-wider uppercase">
-                ðŸš€ CAREER ACCELERATOR
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs">
+                🚀 CAREER ACCELERATOR
               </span>
-              <span class="text-xs text-indigo-600 font-bold">Featured Tool</span>
+              <span class="text-xs text-indigo-500 font-semibold">Recommended</span>
             </div>
-            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug">
               Is Your Resume Ready for Greenhouse & Lever ATS?
             </h3>
-            <p class="text-xs font-bold text-indigo-700 mt-1">Match keywords with top Indian tech employers</p>
-            <p class="mt-3 text-xs sm:text-sm text-slate-500 leading-relaxed">
+            <p class="text-xs font-semibold text-indigo-700 mt-1">Match keywords with top Indian tech employers</p>
+            <p class="mt-4 text-xs sm:text-sm text-slate-500 leading-relaxed">
               75% of Indian tech resumes get filtered before HR ever sees them. Optimize your resume formatting to pass ATS screens automatically.
             </p>
           </div>
           <div class="mt-6 pt-4 border-t border-indigo-100 flex items-center justify-between gap-2">
-            <span class="text-[11px] font-semibold text-slate-400">Sponsored â€¢ Resume.io</span>
+            <span class="text-[11px] text-slate-400">Sponsored • Resume.io</span>
             <a href="https://resume.io/" target="_blank" rel="sponsored nofollow" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition">
-              Free ATS Scan â†—
+              Free ATS Scan ↗
             </a>
           </div>
         </article>
@@ -649,25 +649,25 @@ function renderJobCards() {
 
     const jobCard = `
       <article 
-        class="bg-white rounded-3xl border border-slate-200/90 hover:border-brand-500 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-200 p-6 flex flex-col justify-between group relative"
+        class="bg-white rounded-2xl border border-slate-200 hover:border-brand-300 p-6 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200 group relative"
         aria-labelledby="job-title-${idx}"
       >
         <div>
           <!-- Header Badges & Actions -->
           <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${
               isDirectAts 
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/70' 
-                : 'bg-slate-100 text-slate-700 border border-slate-200/60'
+                ? 'bg-emerald-100 text-emerald-800' 
+                : 'bg-slate-100 text-slate-700'
             }">
-              ${isDirectAts ? 'ðŸŽ¯ Direct Company ATS' : `ðŸ“¡ ${job.source}`}
+              ${isDirectAts ? '🎯 Direct Company ATS' : `📡 ${job.source}`}
             </span>
 
             <div class="flex items-center gap-1.5">
               <button 
                 type="button" 
                 onclick="toggleSaveJob('${job.job_id}', event)" 
-                class="p-1 rounded-xl text-sm transition cursor-pointer ${
+                class="p-1 rounded-lg text-sm transition cursor-pointer ${
                   isSaved 
                     ? 'text-amber-500 hover:text-amber-600 bg-amber-50 border border-amber-200' 
                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
@@ -675,43 +675,43 @@ function renderJobCards() {
                 title="${isSaved ? 'Bookmarked (Click to remove)' : 'Save Job'}"
                 aria-label="${isSaved ? 'Remove bookmark' : 'Bookmark job'}"
               >
-                ${isSaved ? 'â­' : 'â˜†'}
+                ${isSaved ? '⭐' : '☆'}
               </button>
-              <span class="text-[11px] text-slate-400 font-semibold">
+              <span class="text-xs text-slate-400 font-medium">
                 ${posted}
               </span>
             </div>
           </div>
 
           <!-- Company Avatar & Job Title -->
-          <div class="flex items-start gap-3 mt-2">
-            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/90 flex items-center justify-center p-2 shadow-2xs group-hover:scale-105 transition-transform shrink-0 mt-0.5">
-              <img src="${logoUrl}" alt="${escapeHtml(job.company)}" class="w-7 h-7 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="flex items-start gap-3 mt-1">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-brand-700 font-extrabold text-sm shrink-0 overflow-hidden shadow-2xs mt-0.5">
+              <img src="${logoUrl}" alt="${escapeHtml(job.company)}" class="w-6 h-6 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
               <span style="display:none;" class="text-xs font-black text-brand-700">${companyInitial}</span>
             </div>
             <div class="flex-grow min-w-0">
               <h3 id="job-title-${idx}" class="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition leading-snug line-clamp-2">
                 ${escapeHtml(job.title)}
               </h3>
-              <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1 flex items-center gap-1.5">
+              <p class="text-sm font-medium text-slate-600 mt-0.5 flex items-center gap-1.5">
                 <span>${escapeHtml(job.company)}</span>
               </p>
             </div>
           </div>
 
           <!-- Badges Pill Row -->
-          <div class="flex flex-wrap items-center gap-1.5 mt-3.5">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
-              ðŸ“ ${escapeHtml(location)}
+          <div class="flex flex-wrap items-center gap-1.5 mt-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+              📍 ${escapeHtml(location)}
             </span>
             ${job.remote_type ? `
-              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                ðŸŒ ${escapeHtml(job.remote_type)}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
+                🌐 ${escapeHtml(job.remote_type)}
               </span>
             ` : ''}
             ${formattedSalary ? `
-              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                ðŸ’° ${escapeHtml(formattedSalary)}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200/60 font-medium">
+                💰 ${escapeHtml(formattedSalary)}
               </span>
             ` : ''}
           </div>
@@ -728,45 +728,43 @@ function renderJobCards() {
             <button 
               type="button" 
               onclick="openJobModal('${job.job_id}')"
-              class="text-xs font-bold text-slate-600 hover:text-brand-600 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 transition focus:ring-2 focus:ring-brand-500 cursor-pointer"
+              class="text-xs sm:text-sm font-semibold text-slate-600 hover:text-brand-600 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition focus:ring-2 focus:ring-brand-500 cursor-pointer"
               aria-label="View details for ${escapeHtml(job.title)}"
             >
-              Details â†—
+              Details ↗
             </button>
             <button
               type="button"
               onclick="toggleAppliedJob('${job.job_id}', event)"
-              class="text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition cursor-pointer flex items-center gap-1 ${
+              class="text-xs font-semibold px-2 py-1.5 rounded-lg border transition cursor-pointer flex items-center gap-1 ${
                 isApplied 
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' 
                   : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
               }"
               title="${isApplied ? 'Application marked as submitted' : 'Mark as applied'}"
             >
-              ${isApplied ? 'âœ“' : '+'} Applied
+              ${isApplied ? '✓' : '+'} Applied
             </button>
             <button
               type="button"
               onclick="shareOnWhatsApp('${escapeHtml(job.title).replace(/'/g, "\\'")}', '${escapeHtml(job.company).replace(/'/g, "\\'")}', '${escapeHtml(directUrl).replace(/'/g, "\\'")}', event)"
-              class="px-2.5 py-1.5 rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 font-bold text-xs flex items-center gap-1 transition shadow-2xs cursor-pointer"
-              title="Share job directly to WhatsApp friends or groups"
+              class="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 border border-emerald-200/70 transition cursor-pointer flex items-center justify-center text-xs"
+              title="Share job directly to WhatsApp"
               aria-label="Share on WhatsApp"
             >
-              <span>ðŸ’¬</span> <span class="hidden sm:inline">Share</span>
+              💬
             </button>
           </div>
 
           <button 
             type="button" 
             onclick="handleApplyClick('${job.job_id}', '${escapeHtml(directUrl)}', event)"
-            class="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm font-bold text-white ${
-              isApplied 
-                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' 
-                : 'bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 shadow-brand-500/20'
-            } rounded-xl shadow-sm hover:shadow-md transition focus:ring-2 focus:ring-brand-500 cursor-pointer"
+            class="inline-flex items-center justify-center px-3.5 py-2 text-xs sm:text-sm font-bold text-white ${
+              isApplied ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-brand-600 hover:bg-brand-700'
+            } rounded-xl shadow-xs transition hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer"
             aria-label="${isApplied ? 'Revisit application for' : 'Apply directly for'} ${escapeHtml(job.title)} at ${escapeHtml(job.company)}"
           >
-            ${isApplied ? 'âœ“ Applied â†—' : 'Apply â†—'}
+            ${isApplied ? '✓ Applied ↗' : 'Apply ↗'}
           </button>
         </div>
 
@@ -801,7 +799,7 @@ function renderPaginationButtons(totalPages) {
       }"
       aria-label="Previous page"
     >
-      â€¹ Prev
+      ‹ Prev
     </button>
   `);
 
@@ -860,7 +858,7 @@ function renderPaginationButtons(totalPages) {
       }"
       aria-label="Next page"
     >
-      Next â€º
+      Next ›
     </button>
   `);
 
@@ -890,8 +888,8 @@ window.openJobModal = function(jobId) {
 
   elements.modalTitle.textContent = job.title || 'Untitled Role';
   elements.modalCompany.textContent = job.company || 'Company';
-  elements.modalLocation.textContent = `ðŸ“ ${job.location || 'Remote'}`;
-  elements.modalPosted.textContent = `ðŸ“… ${job.posted_date ? formatDate(job.posted_date) : 'Recently'}`;
+  elements.modalLocation.textContent = `📍 ${job.location || 'Remote'}`;
+  elements.modalPosted.textContent = `📅 ${job.posted_date ? formatDate(job.posted_date) : 'Recently'}`;
   elements.modalSource.textContent = job.source || 'Aggregator';
   elements.modalApplyBtn.href = directUrl;
   elements.modalApplyBtn.onclick = (e) => {
@@ -901,12 +899,12 @@ window.openJobModal = function(jobId) {
 
   if (isDirectAts) {
     elements.modalBadgeAts.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-2';
-    elements.modalBadgeAts.textContent = 'ðŸŽ¯ Direct Company ATS Portal (Greenhouse / Lever)';
-    elements.modalApplyBtn.textContent = 'Apply on Company Site â†—';
+    elements.modalBadgeAts.textContent = '🎯 Direct Company ATS Portal (Greenhouse / Lever)';
+    elements.modalApplyBtn.textContent = 'Apply on Company Site ↗';
   } else {
     elements.modalBadgeAts.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 mb-2';
-    elements.modalBadgeAts.textContent = `ðŸ“¡ Via ${job.source} Portal`;
-    elements.modalApplyBtn.textContent = 'Apply via Listing â†—';
+    elements.modalBadgeAts.textContent = `📡 Via ${job.source} Portal`;
+    elements.modalApplyBtn.textContent = 'Apply via Listing ↗';
   }
 
   // Render Description HTML safely with entity decoding & rich formatting
@@ -941,7 +939,7 @@ function updateModalTrackerButtons() {
   const isSaved = state.savedJobIds.has(jobId);
   const isApplied = state.appliedJobIds.has(jobId);
 
-  if (elements.modalSaveIcon) elements.modalSaveIcon.textContent = isSaved ? 'â­' : 'â˜†';
+  if (elements.modalSaveIcon) elements.modalSaveIcon.textContent = isSaved ? '⭐' : '☆';
   if (elements.modalSaveText) elements.modalSaveText.textContent = isSaved ? 'Saved' : 'Save';
   if (elements.modalSaveBtn) {
     elements.modalSaveBtn.className = isSaved 
@@ -949,7 +947,7 @@ function updateModalTrackerButtons() {
       : 'px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer';
   }
 
-  if (elements.modalAppliedIcon) elements.modalAppliedIcon.textContent = isApplied ? 'âœ“' : '+';
+  if (elements.modalAppliedIcon) elements.modalAppliedIcon.textContent = isApplied ? '✓' : '+';
   if (elements.modalAppliedText) elements.modalAppliedText.textContent = isApplied ? 'Applied' : 'Mark Applied';
   if (elements.modalAppliedBtn) {
     elements.modalAppliedBtn.className = isApplied 
@@ -962,10 +960,10 @@ function updateModalTrackerButtons() {
   if (elements.modalApplyBtn) {
     if (isApplied) {
       elements.modalApplyBtn.className = 'px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs hover:shadow focus:ring-2 focus:ring-emerald-500 cursor-pointer flex items-center gap-1.5';
-      elements.modalApplyBtn.textContent = 'âœ“ Applied (Reopen ATS) â†—';
+      elements.modalApplyBtn.textContent = '✓ Applied (Reopen ATS) ↗';
     } else {
       elements.modalApplyBtn.className = 'px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer flex items-center gap-1.5';
-      elements.modalApplyBtn.textContent = state.selectedJob.is_direct_ats ? 'Apply on Company Site â†—' : 'Apply via Listing â†—';
+      elements.modalApplyBtn.textContent = state.selectedJob.is_direct_ats ? 'Apply on Company Site ↗' : 'Apply via Listing ↗';
     }
   }
 }
@@ -1004,9 +1002,9 @@ window.handleApplyClick = function(jobId, directUrl, event) {
     updateTrackerCounters();
     renderJobCards();
     updateModalTrackerButtons();
-    showToast('ðŸŽ‰ Direct ATS application launched and saved in tracker! âœ“');
+    showToast('🎉 Direct ATS application launched and saved in tracker! ✓');
   } else {
-    showToast('Opening official ATS portal (already marked as applied)... â†—');
+    showToast('Opening official ATS portal (already marked as applied)... ↗');
   }
 
   // Open the official ATS portal in a new window/tab
@@ -1043,7 +1041,7 @@ window.toggleSaveJob = function(jobId, event) {
     showToast('Removed from saved bookmarks');
   } else {
     state.savedJobIds.add(jobId);
-    showToast('Saved to your bookmarks! â­');
+    showToast('Saved to your bookmarks! ⭐');
   }
   localStorage.setItem(STORAGE_KEYS.SAVED, JSON.stringify([...state.savedJobIds]));
   updateTrackerCounters();
@@ -1060,7 +1058,7 @@ window.toggleAppliedJob = function(jobId, event) {
 
   // Once marked as applied, status permanently stays applied (cannot revert back)
   if (state.appliedJobIds.has(jobId)) {
-    showToast('âœ“ This job is already marked as applied in your tracker!');
+    showToast('✓ This job is already marked as applied in your tracker!');
     return;
   }
 
@@ -1073,7 +1071,7 @@ window.toggleAppliedJob = function(jobId, event) {
     renderJobCards();
   }
   updateModalTrackerButtons();
-  showToast('ðŸŽ‰ Marked as Applied! âœ“');
+  showToast('🎉 Marked as Applied! ✓');
 };
 
 window.reportJobClosed = function(jobId) {
@@ -1091,11 +1089,11 @@ function formatSalaryWithLPA(salaryStr) {
   if (!s) return null;
 
   // Already in LPA / INR
-  if (/\b(lpa|inr|â‚¹|lakhs?)\b/i.test(s)) {
+  if (/\b(lpa|inr|₹|lakhs?)\b/i.test(s)) {
     return s;
   }
 
-  // USD Conversion (1 USD â‰ˆ 84 INR)
+  // USD Conversion (1 USD ≈ 84 INR)
   if (/\$|\busd\b/i.test(s)) {
     const isHourly = /\/(hr|hour)\b/i.test(s);
     const matches = [];
@@ -1113,14 +1111,14 @@ function formatSalaryWithLPA(salaryStr) {
       }
     }
     if (matches.length === 1) {
-      return `${s} (â‰ˆ â‚¹${matches[0]} LPA)`;
+      return `${s} (≈ ₹${matches[0]} LPA)`;
     } else if (matches.length >= 2) {
-      return `${s} (â‰ˆ â‚¹${Math.min(matches[0], matches[1])} - ${Math.max(matches[0], matches[1])} LPA)`;
+      return `${s} (≈ ₹${Math.min(matches[0], matches[1])} - ${Math.max(matches[0], matches[1])} LPA)`;
     }
   }
 
-  // EUR Conversion (1 EUR â‰ˆ 91 INR)
-  if (/â‚¬|\beur\b/i.test(s)) {
+  // EUR Conversion (1 EUR ≈ 91 INR)
+  if (/€|\beur\b/i.test(s)) {
     const matches = [];
     const numRegex = /(\d+(?:[.,]\d+)?)\s*(k|thousand)?/gi;
     let match;
@@ -1134,9 +1132,9 @@ function formatSalaryWithLPA(salaryStr) {
       }
     }
     if (matches.length === 1) {
-      return `${s} (â‰ˆ â‚¹${matches[0]} LPA)`;
+      return `${s} (≈ ₹${matches[0]} LPA)`;
     } else if (matches.length >= 2) {
-      return `${s} (â‰ˆ â‚¹${Math.min(matches[0], matches[1])} - ${Math.max(matches[0], matches[1])} LPA)`;
+      return `${s} (≈ ₹${Math.min(matches[0], matches[1])} - ${Math.max(matches[0], matches[1])} LPA)`;
     }
   }
 
@@ -1509,10 +1507,10 @@ elements.modalCopyBtn.addEventListener('click', () => {
 
 window.shareOnWhatsApp = function(title, company, url, event) {
   if (event) event.stopPropagation();
-  const text = `ðŸš¨ *Direct Tech Opening (No Middlemen)*\n\nðŸŽ¯ *Role:* ${title}\nðŸ¢ *Company:* ${company}\n\nðŸ‘‰ Apply directly on company ATS portal:\n${url}\n\nFound via JobsForIndia â€” verified tech jobs for Indian candidates! ðŸ‡®ðŸ‡³`;
+  const text = `🚨 *Direct Tech Opening (No Middlemen)*\n\n🎯 *Role:* ${title}\n🏢 *Company:* ${company}\n\n👉 Apply directly on company ATS portal:\n${url}\n\nFound via JobsForIndia — verified tech jobs for Indian candidates! 🇮🇳`;
   const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
   window.open(shareUrl, '_blank', 'noopener,noreferrer');
-  showToast('Opening WhatsApp to share job... ðŸ’¬');
+  showToast('Opening WhatsApp to share job... 💬');
 };
 
 // ============================================================
@@ -1561,7 +1559,7 @@ window.submitEmployerJob = function() {
     salary: salary || null,
     apply_url: applyUrl,
     direct_apply_url: applyUrl,
-    source: 'Featured Employer â­',
+    source: 'Featured Employer ⭐',
     posted_date: new Date().toISOString().split('T')[0],
     is_direct_ats: true,
     is_india_eligible: true,
@@ -1573,7 +1571,7 @@ window.submitEmployerJob = function() {
   closeEmployerModal();
   if (elements.employerJobForm) elements.employerJobForm.reset();
   applyFilters();
-  showToast('ðŸŽ‰ Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
+  showToast('🎉 Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
 };
 
 // Employer Modal Listeners
