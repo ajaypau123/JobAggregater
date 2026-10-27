@@ -321,18 +321,56 @@ function updateCompanyOptions() {
     elements.companySelect.value = 'all';
   }
 
-  // Populate datalist for interactive search
-  const datalist = document.getElementById('company-datalist');
-  if (datalist) {
-    datalist.innerHTML = companies.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+  // Calculate job counts per company
+  const companyCounts = {};
+  relevantJobs.forEach(j => {
+    const c = (j.company || '').trim();
+    if (c) companyCounts[c] = (companyCounts[c] || 0) + 1;
+  });
+
+  // Populate floating searchable combobox list
+  const comboboxList = document.getElementById('company-combobox-list');
+  if (comboboxList) {
+    const allSelected = state.companyFilter === 'all'
+      ? 'bg-brand-50 text-brand-700 font-bold'
+      : 'text-slate-700 hover:bg-slate-50';
+    let html = `
+      <li onclick="selectComboboxCompany('all')" class="px-3 py-2 flex items-center justify-between cursor-pointer rounded-xl font-medium transition ${allSelected}">
+        <span>All Companies</span>
+        <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full">${relevantJobs.length}</span>
+      </li>
+    `;
+
+    html += companies.map(c => {
+      const count = companyCounts[c] || 0;
+      const isSel = state.companyFilter === c
+        ? 'bg-brand-50 text-brand-700 font-bold'
+        : 'text-slate-700 hover:bg-slate-50';
+      return `
+        <li onclick="selectComboboxCompany('${escapeHtml(c).replace(/'/g, "\\'")}')" data-company="${escapeHtml(c).toLowerCase()}" class="company-combobox-item px-3 py-2 flex items-center justify-between cursor-pointer rounded-xl font-medium transition ${isSel}">
+          <span class="truncate">${escapeHtml(c)}</span>
+          <span class="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full shrink-0 ml-2">${count}</span>
+        </li>
+      `;
+    }).join('');
+
+    comboboxList.innerHTML = html;
   }
+
+  const comboboxSelected = document.getElementById('company-combobox-selected');
+  if (comboboxSelected) {
+    if (state.companyFilter === 'all') {
+      comboboxSelected.textContent = 'All Companies';
+      comboboxSelected.className = 'truncate font-semibold text-slate-700';
+    } else {
+      comboboxSelected.textContent = state.companyFilter;
+      comboboxSelected.className = 'truncate font-bold text-brand-600';
+    }
+  }
+
   const countLabel = document.getElementById('company-count-label');
   if (countLabel) {
     countLabel.textContent = `${companies.length}+ available`;
-  }
-  const companySearchInput = document.getElementById('company-search-input');
-  if (companySearchInput && state.companyFilter !== 'all') {
-    companySearchInput.value = state.companyFilter;
   }
 
   // Highlight company dropdown when CompanyATS is selected
@@ -1467,36 +1505,110 @@ elements.sortSelect.addEventListener('change', e => {
   applyFilters(false);
 });
 
-// Searchable Company Autocomplete Input Listener
-const companySearchInput = document.getElementById('company-search-input');
-const clearCompanyBtn = document.getElementById('clear-company-btn');
+// Global Searchable Combobox Selection Handler
+window.selectComboboxCompany = function(company) {
+  state.companyFilter = company;
+  if (elements.companySelect) elements.companySelect.value = company;
 
-if (companySearchInput) {
-  companySearchInput.addEventListener('input', e => {
-    const val = e.target.value.trim();
-    if (clearCompanyBtn) {
-      if (val) clearCompanyBtn.classList.remove('hidden');
-      else clearCompanyBtn.classList.add('hidden');
+  const comboboxSelected = document.getElementById('company-combobox-selected');
+  if (comboboxSelected) {
+    if (company === 'all') {
+      comboboxSelected.textContent = 'All Companies';
+      comboboxSelected.className = 'truncate font-semibold text-slate-700';
+    } else {
+      comboboxSelected.textContent = company;
+      comboboxSelected.className = 'truncate font-bold text-brand-600';
     }
-    state.companyFilter = val ? val : 'all';
-    if (elements.companySelect) {
-      elements.companySelect.value = state.companyFilter;
+  }
+
+  // Close menu and reset chevron
+  const menu = document.getElementById('company-combobox-menu');
+  const chevron = document.getElementById('company-combobox-chevron');
+  if (menu) menu.classList.add('hidden');
+  if (chevron) chevron.style.transform = 'rotate(0deg)';
+
+  // Update item styling in list
+  const list = document.getElementById('company-combobox-list');
+  if (list) {
+    const items = list.querySelectorAll('li');
+    items.forEach(li => {
+      const isAll = li.textContent.includes('All Companies');
+      if ((company === 'all' && isAll) || (!isAll && li.getAttribute('data-company') === company.toLowerCase())) {
+        li.className = 'company-combobox-item px-3 py-2 flex items-center justify-between cursor-pointer rounded-xl font-bold transition bg-brand-50 text-brand-700';
+      } else {
+        li.className = 'company-combobox-item px-3 py-2 flex items-center justify-between cursor-pointer rounded-xl font-medium transition text-slate-700 hover:bg-slate-50';
+      }
+    });
+  }
+
+  applyFilters();
+};
+
+// Combobox Trigger Button & Floating Menu
+const comboboxBtn = document.getElementById('company-combobox-btn');
+const comboboxMenu = document.getElementById('company-combobox-menu');
+const comboboxChevron = document.getElementById('company-combobox-chevron');
+const comboboxSearch = document.getElementById('company-combobox-search');
+const comboboxClear = document.getElementById('company-combobox-clear');
+
+if (comboboxBtn && comboboxMenu) {
+  comboboxBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const isHidden = comboboxMenu.classList.contains('hidden');
+    if (isHidden) {
+      comboboxMenu.classList.remove('hidden');
+      if (comboboxChevron) comboboxChevron.style.transform = 'rotate(180deg)';
+      if (comboboxSearch) {
+        comboboxSearch.value = '';
+        comboboxSearch.focus();
+        const items = document.querySelectorAll('.company-combobox-item');
+        items.forEach(it => it.classList.remove('hidden'));
+        if (comboboxClear) comboboxClear.classList.add('hidden');
+      }
+    } else {
+      comboboxMenu.classList.add('hidden');
+      if (comboboxChevron) comboboxChevron.style.transform = 'rotate(0deg)';
     }
-    applyFilters();
+  });
+
+  // Close when clicking outside anywhere on document
+  document.addEventListener('click', e => {
+    if (!comboboxMenu.contains(e.target) && !comboboxBtn.contains(e.target)) {
+      comboboxMenu.classList.add('hidden');
+      if (comboboxChevron) comboboxChevron.style.transform = 'rotate(0deg)';
+    }
   });
 }
 
-if (clearCompanyBtn) {
-  clearCompanyBtn.addEventListener('click', () => {
-    if (companySearchInput) companySearchInput.value = '';
-    clearCompanyBtn.classList.add('hidden');
-    state.companyFilter = 'all';
-    if (elements.companySelect) elements.companySelect.value = 'all';
-  const compInput = document.getElementById('company-search-input');
-  if (compInput) compInput.value = '';
-  const clrBtn = document.getElementById('clear-company-btn');
-  if (clrBtn) clrBtn.classList.add('hidden');
-    applyFilters();
+// Combobox Live Search Filtering
+if (comboboxSearch) {
+  comboboxSearch.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    if (comboboxClear) {
+      if (q) comboboxClear.classList.remove('hidden');
+      else comboboxClear.classList.add('hidden');
+    }
+    const items = document.querySelectorAll('.company-combobox-item');
+    items.forEach(item => {
+      const compName = item.getAttribute('data-company') || '';
+      if (!q || compName.includes(q)) {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
+    });
+  });
+}
+
+if (comboboxClear) {
+  comboboxClear.addEventListener('click', () => {
+    if (comboboxSearch) {
+      comboboxSearch.value = '';
+      comboboxSearch.focus();
+    }
+    comboboxClear.classList.add('hidden');
+    const items = document.querySelectorAll('.company-combobox-item');
+    items.forEach(it => it.classList.remove('hidden'));
   });
 }
 
@@ -1541,7 +1653,8 @@ elements.resetFiltersBtn.addEventListener('click', () => {
   state.currentPage = 1;
   state.itemsPerPage = 18;
 
-  if (elements.roleSelect) elements.roleSelect.value = 'all';
+  if (elements.roleSelect) elements.roleSelect.value = 'all';
+
   elements.expSelect.value = 'all';
   elements.levelSelect.value = 'all';
   elements.typeSelect.value = 'all';
