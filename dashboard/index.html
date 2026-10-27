@@ -30,16 +30,25 @@
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          },
           colors: {
             brand: {
               50: '#eef2ff',
               100: '#e0e7ff',
+              200: '#c7d2fe',
               500: '#6366f1',
               600: '#4f46e5',
               700: '#4338ca',
@@ -53,6 +62,9 @@
   </script>
 
   <style>
+    * {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
     /* Clean typography & list styling for rich job descriptions inside the modal */
     #modal-content {
       color: #334155;
@@ -135,41 +147,49 @@
     Skip to main content
   </a>
 
-  <!-- Header & Navigation -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs" role="banner">
+  <!-- Header & Navigation (Glassmorphic) -->
+  <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs transition-all" role="banner">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+      <div class="flex items-center justify-between h-16 sm:h-20">
         
         <!-- Logo & Branding -->
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-brand-500/20">
             🎯
           </div>
           <div>
-            <span class="text-xl font-bold tracking-tight text-slate-900">Jobs<span class="text-brand-600">ForIndia</span></span>
-            <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">
-              Direct Apply
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">Jobs<span class="text-brand-600">ForIndia</span></span>
+              <span class="hidden sm:inline-block px-2.5 py-0.5 text-[11px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                Direct Apply
+              </span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium hidden sm:block">Direct ATS Portals • Zero Middlemen</span>
           </div>
         </div>
 
         <!-- Header Actions / Info -->
         <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Live Pulse Count Badge -->
+          <div class="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span id="header-count-badge">3,335 verified jobs</span>
+          </div>
+
           <!-- Telegram Community Pill -->
-          <a href="https://t.me/JobsForIndia" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition shadow-2xs" title="Join Telegram channel for instant daily job drops">
+          <a href="https://t.me/JobsForIndia" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition shadow-2xs" title="Join Telegram channel for instant daily job drops">
             <span>✈️</span> <span>Telegram Alerts</span>
           </a>
 
           <!-- Employer Post Job CTA -->
-          <button id="employer-post-btn" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition shadow-xs hover:shadow cursor-pointer" title="Post or feature your job to 10,000+ Indian engineers">
+          <button id="employer-post-btn" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:to-indigo-900 text-white shadow-sm hover:shadow transition transform active:scale-95 cursor-pointer" title="Post or feature your job to 10,000+ Indian engineers">
             <span>🏢</span> <span>Post a Job • ₹1,999</span>
           </button>
 
-          <div class="text-right hidden sm:block">
-            <span class="text-xs text-slate-500 block">Verified for Indian Candidates</span>
-            <span id="header-count-badge" class="text-xs font-semibold text-brand-600">Loading jobs...</span>
-          </div>
-          <button id="refresh-btn" type="button" aria-label="Refresh job listings" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors focus:ring-2 focus:ring-brand-500">
+          <button id="refresh-btn" type="button" aria-label="Refresh job listings" class="p-2 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-xl transition-colors focus:ring-2 focus:ring-brand-500" title="Refresh Listings">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
@@ -180,37 +200,45 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="bg-gradient-to-b from-white to-slate-50 border-b border-slate-200 py-10 px-4 sm:px-6 lg:px-8 text-center" aria-labelledby="hero-title">
-    <div class="max-w-3xl mx-auto">
-      <h1 id="hero-title" class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-        Apply Directly to Companies. <span class="text-brand-600">Zero Middlemen.</span>
+  <!-- Hero Section (Ambient Modern Design) -->
+  <section class="relative overflow-hidden bg-gradient-to-b from-brand-50/40 via-white to-slate-50 border-b border-slate-200/80 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center" aria-labelledby="hero-title">
+    <!-- Ambient mesh glow background -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-64 bg-gradient-to-r from-brand-400/10 via-purple-400/10 to-indigo-400/10 blur-3xl pointer-events-none -z-10"></div>
+
+    <div class="max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 mb-5 shadow-2xs">
+        <span>⚡</span> <span>Direct Company Portals • No Consultancies • No Ghost Jobs</span>
+      </div>
+
+      <h1 id="hero-title" class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight sm:leading-snug">
+        Apply Directly to Companies. <br class="hidden sm:inline" />
+        <span class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Zero Middlemen.</span>
       </h1>
-      <p class="mt-3 text-base sm:text-lg text-slate-600">
-        Aggregated from verified sources across India and worldwide remote teams open to Indian applicants. Apply on the official company ATS portal.
+      <p class="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+        Curated engineering, QA, DevOps, and tech roles open to Indian candidates. Direct links to employer Greenhouse, Lever, Ashby, and Workday portals.
       </p>
 
-      <!-- Search Box (Accessible) -->
-      <form id="search-form" class="mt-6 flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto" role="search" onsubmit="event.preventDefault();">
+      <!-- Search Box (Command / Spotlight Style) -->
+      <form id="search-form" class="mt-8 flex flex-col sm:flex-row gap-2 max-w-2xl mx-auto bg-white p-2 sm:p-2.5 rounded-2xl shadow-xl shadow-brand-500/5 border border-slate-200/90 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100 transition" role="search" onsubmit="event.preventDefault();">
         <label for="search-input" class="sr-only">Search jobs by title, company, or keyword</label>
-        <div class="relative flex-grow">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        <div class="relative flex-grow flex items-center">
+          <div class="pl-3.5 pr-2 pointer-events-none text-slate-400">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
           </div>
           <input 
             type="search" 
             id="search-input" 
-            placeholder="Search role, skills (e.g. QA, Python, React, Remote)..." 
-            class="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 shadow-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm sm:text-base outline-none transition"
+            placeholder="Search role, skills, company (e.g. QA, SDET, Python, React, Bangalore)..." 
+            class="w-full py-2.5 bg-transparent text-slate-900 placeholder-slate-400 text-sm sm:text-base outline-none font-medium"
             autocomplete="off"
           >
         </div>
         <button 
           type="button" 
           id="clear-search-btn" 
-          class="hidden sm:inline-flex items-center justify-center px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition shadow-xs focus:ring-2 focus:ring-brand-500"
+          class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
           aria-label="Clear search input"
         >
           Clear
@@ -219,22 +247,22 @@
 
       <!-- Quick Filter Pills -->
       <nav class="mt-6 flex flex-wrap items-center justify-center gap-2" aria-label="Role quick filters">
-        <button class="filter-pill active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-brand-600 text-white shadow-xs" data-filter="all">
+        <button class="filter-pill active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer" data-filter="all">
           All Roles
         </button>
-        <button class="filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200" data-filter="qa">
+        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="qa">
           🧪 QA & Testing
         </button>
-        <button class="filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200" data-filter="engineer">
+        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="engineer">
           💻 Software Engineers
         </button>
-        <button class="filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200" data-filter="devops">
+        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="devops">
           ☁️ DevOps & Cloud
         </button>
-        <button class="filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200" data-filter="data">
+        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="data">
           📊 Data & AI
         </button>
-        <button class="filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200" data-filter="support">
+        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="support">
           🎧 Support & Ops
         </button>
       </nav>

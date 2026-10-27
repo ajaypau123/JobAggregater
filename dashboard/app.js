@@ -617,6 +617,16 @@ function renderJobCards() {
     const companyInitial = (job.company || 'C').charAt(0).toUpperCase();
     const companyClean = (job.company || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const logoUrl = `https://www.google.com/s2/favicons?domain=${companyClean}.com&sz=64`;
+    const colorGradients = [
+      'from-indigo-500 to-purple-600',
+      'from-blue-500 to-cyan-600',
+      'from-emerald-500 to-teal-600',
+      'from-violet-500 to-fuchsia-600',
+      'from-rose-500 to-pink-600',
+      'from-amber-500 to-orange-600',
+    ];
+    const gradIndex = Math.abs((job.company || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % colorGradients.length;
+    const avatarGrad = colorGradients[gradIndex];
 
     let sponsoredCard = '';
     if (idx > 0 && idx % 6 === 0) {
@@ -649,16 +659,16 @@ function renderJobCards() {
 
     const jobCard = `
       <article 
-        class="bg-white rounded-2xl border border-slate-200 hover:border-brand-300 p-6 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200 group relative"
+        class="bg-white rounded-3xl border border-slate-200/90 hover:border-brand-400 p-6 flex flex-col justify-between shadow-2xs hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-300 group relative"
         aria-labelledby="job-title-${idx}"
       >
         <div>
           <!-- Header Badges & Actions -->
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+          <div class="flex items-center justify-between gap-2 mb-3.5">
+            <span class="text-xs font-bold px-3 py-1 rounded-full ${
               isDirectAts 
-                ? 'bg-emerald-100 text-emerald-800' 
-                : 'bg-slate-100 text-slate-700'
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80' 
+                : 'bg-slate-100 text-slate-700 border border-slate-200/60'
             }">
               ${isDirectAts ? '🎯 Direct Company ATS' : `📡 ${job.source}`}
             </span>
@@ -667,7 +677,7 @@ function renderJobCards() {
               <button 
                 type="button" 
                 onclick="toggleSaveJob('${job.job_id}', event)" 
-                class="p-1 rounded-lg text-sm transition cursor-pointer ${
+                class="p-1.5 rounded-xl text-sm transition cursor-pointer ${
                   isSaved 
                     ? 'text-amber-500 hover:text-amber-600 bg-amber-50 border border-amber-200' 
                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
@@ -684,16 +694,16 @@ function renderJobCards() {
           </div>
 
           <!-- Company Avatar & Job Title -->
-          <div class="flex items-start gap-3 mt-1">
-            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-brand-700 font-extrabold text-sm shrink-0 overflow-hidden shadow-2xs mt-0.5">
-              <img src="${logoUrl}" alt="${escapeHtml(job.company)}" class="w-6 h-6 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-              <span style="display:none;" class="text-xs font-black text-brand-700">${companyInitial}</span>
+          <div class="flex items-start gap-3.5 mt-1">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${avatarGrad} flex items-center justify-center text-white font-extrabold text-base shrink-0 shadow-sm mt-0.5 relative overflow-hidden group-hover:scale-105 transition-transform">
+              <img src="${logoUrl}" alt="${escapeHtml(job.company)}" class="w-full h-full object-cover p-1 bg-white" onerror="this.remove();">
+              <span class="text-sm font-black text-white">${companyInitial}</span>
             </div>
             <div class="flex-grow min-w-0">
-              <h3 id="job-title-${idx}" class="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition leading-snug line-clamp-2">
+              <h3 id="job-title-${idx}" class="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors leading-snug line-clamp-2">
                 ${escapeHtml(job.title)}
               </h3>
-              <p class="text-sm font-medium text-slate-600 mt-0.5 flex items-center gap-1.5">
+              <p class="text-sm font-semibold text-slate-500 mt-0.5 flex items-center gap-1.5">
                 <span>${escapeHtml(job.company)}</span>
               </p>
             </div>
