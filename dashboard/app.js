@@ -1682,7 +1682,8 @@ elements.resetFiltersBtn.addEventListener('click', () => {
 
 // Refresh Button
 elements.refreshBtn.addEventListener('click', () => {
-  fetchJobs();
+  initMonetization();
+fetchJobs();
 });
 
 // Modal Events
@@ -1801,7 +1802,13 @@ window.submitEmployerJob = function() {
   closeEmployerModal();
   if (elements.employerJobForm) elements.employerJobForm.reset();
   applyFilters();
-  showToast('🎉 Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
+  // Open Razorpay / UPI payment link in new window if configured
+  if (window.MONETIZATION_CONFIG && window.MONETIZATION_CONFIG.employerPayment && window.MONETIZATION_CONFIG.employerPayment.paymentUrl) {
+    window.open(window.MONETIZATION_CONFIG.employerPayment.paymentUrl, '_blank', 'noopener,noreferrer');
+    showToast('🎉 Opening checkout! Once paid, job is verified as #1 Featured Opening.');
+  } else {
+    showToast('🎉 Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
+  }
 };
 
 // Employer Modal Listeners
@@ -1821,6 +1828,43 @@ document.addEventListener('keydown', e => {
     closeEmployerModal();
   }
 });
+
+
+// ============================================================
+// DYNAMIC MONETIZATION & AFFILIATE WIRING
+// ============================================================
+function initMonetization() {
+  if (!window.MONETIZATION_CONFIG) return;
+  const cfg = window.MONETIZATION_CONFIG;
+
+  // Header Telegram Link
+  const tgBtn = document.getElementById('header-telegram-btn');
+  if (tgBtn && cfg.alertsCommunity && cfg.alertsCommunity.telegramChannelUrl) {
+    tgBtn.href = cfg.alertsCommunity.telegramChannelUrl;
+  }
+
+  // Resume Affiliate Link in Modal
+  const resumeBtn = document.getElementById('modal-resume-affiliate');
+  if (resumeBtn && cfg.resumeChecker) {
+    if (cfg.resumeChecker.enabled) {
+      resumeBtn.href = cfg.resumeChecker.url;
+      resumeBtn.classList.remove('hidden');
+    } else {
+      resumeBtn.classList.add('hidden');
+    }
+  }
+
+  // Mentorship Affiliate Link in Modal
+  const topmateBtn = document.getElementById('modal-topmate-affiliate');
+  if (topmateBtn && cfg.mentorship) {
+    if (cfg.mentorship.enabled) {
+      topmateBtn.href = cfg.mentorship.url;
+      topmateBtn.classList.remove('hidden');
+    } else {
+      topmateBtn.classList.add('hidden');
+    }
+  }
+}
 
 // Boot App
 fetchJobs();
