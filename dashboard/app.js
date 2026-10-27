@@ -320,6 +320,20 @@ function updateCompanyOptions() {
     elements.companySelect.value = 'all';
   }
 
+  // Populate datalist for interactive search
+  const datalist = document.getElementById('company-datalist');
+  if (datalist) {
+    datalist.innerHTML = companies.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+  }
+  const countLabel = document.getElementById('company-count-label');
+  if (countLabel) {
+    countLabel.textContent = `${companies.length}+ available`;
+  }
+  const companySearchInput = document.getElementById('company-search-input');
+  if (companySearchInput && state.companyFilter !== 'all') {
+    companySearchInput.value = state.companyFilter;
+  }
+
   // Highlight company dropdown when CompanyATS is selected
   if (elements.companyFilterCol) {
     if (state.sourceFilter === 'CompanyATS') {
@@ -1415,6 +1429,61 @@ elements.sortSelect.addEventListener('change', e => {
   state.sortBy = e.target.value;
   applyFilters(false);
 });
+
+// Searchable Company Autocomplete Input Listener
+const companySearchInput = document.getElementById('company-search-input');
+const clearCompanyBtn = document.getElementById('clear-company-btn');
+
+if (companySearchInput) {
+  companySearchInput.addEventListener('input', e => {
+    const val = e.target.value.trim();
+    if (clearCompanyBtn) {
+      if (val) clearCompanyBtn.classList.remove('hidden');
+      else clearCompanyBtn.classList.add('hidden');
+    }
+    state.companyFilter = val ? val : 'all';
+    if (elements.companySelect) {
+      elements.companySelect.value = state.companyFilter;
+    }
+    applyFilters();
+  });
+}
+
+if (clearCompanyBtn) {
+  clearCompanyBtn.addEventListener('click', () => {
+    if (companySearchInput) companySearchInput.value = '';
+    clearCompanyBtn.classList.add('hidden');
+    state.companyFilter = 'all';
+    if (elements.companySelect) elements.companySelect.value = 'all';
+  const compInput = document.getElementById('company-search-input');
+  if (compInput) compInput.value = '';
+  const clrBtn = document.getElementById('clear-company-btn');
+  if (clrBtn) clrBtn.classList.add('hidden');
+    applyFilters();
+  });
+}
+
+// More Filters Collapsible Accordion
+const toggleMoreBtn = document.getElementById('toggle-more-filters-btn');
+const moreFiltersPanel = document.getElementById('more-filters-panel');
+const moreFiltersChevron = document.getElementById('more-filters-chevron');
+
+if (toggleMoreBtn && moreFiltersPanel) {
+  toggleMoreBtn.addEventListener('click', () => {
+    const isHidden = moreFiltersPanel.classList.contains('hidden');
+    if (isHidden) {
+      moreFiltersPanel.classList.remove('hidden');
+      moreFiltersPanel.classList.add('grid');
+      if (moreFiltersChevron) moreFiltersChevron.textContent = '▴';
+      toggleMoreBtn.classList.add('bg-brand-50', 'text-brand-700', 'border-brand-300');
+    } else {
+      moreFiltersPanel.classList.add('hidden');
+      moreFiltersPanel.classList.remove('grid');
+      if (moreFiltersChevron) moreFiltersChevron.textContent = '▾';
+      toggleMoreBtn.classList.remove('bg-brand-50', 'text-brand-700', 'border-brand-300');
+    }
+  });
+}
 
 // Reset Button
 elements.resetFiltersBtn.addEventListener('click', () => {
