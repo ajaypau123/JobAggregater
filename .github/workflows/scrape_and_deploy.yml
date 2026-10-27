@@ -41,41 +41,26 @@ jobs:
         run: |
           python -m aggregator.main --india
 
-      - name: Copy latest jobs feed into dashboard directory
-        run: |
-          # Copy latest jobs feed into dashboard
-          if [ -f output/jobs_latest.json ]; then
-            cp output/jobs_latest.json dashboard/jobs_latest.json
-          fi
-
-      - name: Commit & Push Updated Jobs and SQLite DB
-        continue-on-error: true
+      - name: Commit & Push Updated Dashboard Feed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add -f output/jobs_latest.json output/jobs.db dashboard/jobs_latest.json dashboard/jobs_latest.js || true
+          git add dashboard/jobs_latest.js
           git commit -m "Auto-update job listings [skip ci]" || echo "No changes to commit"
-          git push || echo "Push failed, proceeding with deployment"
+          git push || echo "Git push skipped or up to date"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dashboard'
 
   deploy-dashboard:
     needs: scrape-and-update
-    if: always()
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'dashboard'
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
