@@ -24,9 +24,9 @@ Selects Profile Preferences:
       │
       ▼
 Chooses Plan:
-  ├─ ⭐ VIP Pass (3 Months) ➔ ₹49  (~₹16/mo, Most Popular)
-  ├─ 💎 Annual VIP (1 Year) ➔ ₹99  (Save 50%)
-  └─ 🎁 Free Weekly Digest  ➔ ₹0   (Builds organic email list)
+  ├─ ⚡ 1-Month Starter Pass   ➔ ₹49  (30-day interview sprint)
+  ├─ ⭐ 3-Month Complete Sprint ➔ ₹99  (Full hiring cycle • Just ₹33/mo, Most Popular 🔥)
+  └─ 🎁 Free Weekly Digest      ➔ ₹0   (Builds organic email list)
       │
       ▼
 Action:
@@ -74,19 +74,19 @@ You do **not** need a paid server. You can choose either of these two enterprise
 
 1. Log in to your Razorpay Dashboard: [https://dashboard.razorpay.com/app/payment-links](https://dashboard.razorpay.com/app/payment-links)
 2. Click **Create Payment Link**:
-   - **Link 1 (₹49 - 3 Months VIP Pass):**
+   - **Link 1 (₹49 - 1-Month Starter Pass):**
      - Amount: `₹49`
-     - Description: `TechJobsForIndia VIP Job Alerts Pass (3 Months)`
+     - Description: `TechJobsForIndia 1-Month Job Alerts Starter Pass`
      - Notify via: Email / SMS
      - Copy the generated URL (e.g. `https://rzp.io/l/abc123xyz`)
-   - **Link 2 (₹99 - 1 Year Annual Pass):**
+   - **Link 2 (₹99 - 3-Month Complete Sprint Pass):**
      - Amount: `₹99`
-     - Description: `TechJobsForIndia Annual VIP Alerts Pass (1 Year)`
+     - Description: `TechJobsForIndia 3-Month Complete Sprint VIP Pass`
      - Copy the generated URL
 3. Open `dashboard/affiliates-config.js` and paste your links into `jobAlerts`:
    ```javascript
+   paymentUrl1Mo: "https://rzp.io/l/YOUR_1MO_LINK",
    paymentUrl3Mo: "https://rzp.io/l/YOUR_3MO_LINK",
-   paymentUrl1Yr: "https://rzp.io/l/YOUR_1YR_LINK",
    ```
 
 ---
@@ -127,15 +127,17 @@ python -m aggregator.alerts.dispatcher --dry-run
 
 ---
 
-## 6. Financial Projections for Job Alerts Stream
+## 6. Financial Projections for Job Alerts Stream (Decoy Pricing Model)
 
-| Active Subscribers | Quarterly Revenue (₹49/3mo) | Monthly Equivalent | Email Dispatch Cost | Net Profit Margin |
+*Assumption: 80% of candidates choose the ₹99 3-Month Sprint, 20% choose the ₹49 1-Month Starter (Average Order Value = ₹89)*
+
+| Active Paying Subscribers | Quarterly Revenue | Monthly Equivalent | Email Dispatch Cost | Net Profit Margin |
 | :--- | :--- | :--- | :--- | :--- |
-| **50 subscribers** | ₹2,450 | ₹816 | ₹0 (Free tier) | **100%** |
-| **250 subscribers** | ₹12,250 | ₹4,083 | ₹0 (Free tier) | **100%** |
-| **1,000 subscribers** | ₹49,000 | ₹16,333 | ₹0 (Free tier) | **100%** |
-| **3,000 subscribers** | ₹1,47,000 | ₹49,000 | ₹0 (Resend free) | **100%** |
-| **10,000 subscribers** | ₹4,90,000 | ₹1,63,333 | ~₹1,200/mo (SES) | **99.3%** |
+| **50 subscribers** | ₹4,450 | ₹1,483 | ₹0 (Free tier) | **100%** |
+| **250 subscribers** | ₹22,250 | ₹7,416 | ₹0 (Free tier) | **100%** |
+| **1,000 subscribers** | ₹89,000 | ₹29,666 | ₹0 (Free tier) | **100%** |
+| **3,000 subscribers** | ₹2,67,000 | ₹89,000 | ₹0 (Resend free) | **100%** |
+| **10,000 subscribers** | ₹8,90,000 | ₹2,96,666 | ~₹1,200/mo (SES) | **99.6%** |
 
 ---
 
@@ -149,3 +151,4 @@ python -m aggregator.alerts.dispatcher --dry-run
 - [ ] User creates ₹49 and ₹99 payment links in Razorpay
 - [ ] User pastes payment links into `dashboard/affiliates-config.js`
 - [ ] User adds `RESEND_API_KEY` to GitHub Secrets
+

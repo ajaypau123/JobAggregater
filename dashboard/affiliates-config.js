@@ -88,7 +88,7 @@ window.MONETIZATION_CONFIG = {
   // ============================================================
   // 6. VIP JOB ALERTS & SUBSCRIBER PASS (Micro-Subscription)
   // Direct ATS alerts to Email / Telegram / WhatsApp
-  // Candidates pay ₹49 for 3 months or ₹99 for 1 year
+  // Candidates pay ₹49 for 1 Month or ₹99 for 3 Months (Decoy Pricing)
   // Create free Razorpay Payment Links at: https://dashboard.razorpay.com/app/payment-links
   // ============================================================
   jobAlerts: {
@@ -97,14 +97,14 @@ window.MONETIZATION_CONFIG = {
     headline: "Never Miss a Job Drop Again",
     subtitle: "Get verified direct ATS roles matching your skills sent straight to your inbox.",
     pricing: {
-      vip3MoInr: 49,
-      vip1YrInr: 99,
+      vip1MoInr: 49,
+      vip3MoInr: 99,
       freeTierEnabled: true
     },
-    // Replace with your Razorpay Payment Link for ₹49 (3 Months)
+    // Replace with your Razorpay Payment Link for ₹49 (1 Month Starter)
+    paymentUrl1Mo: "https://rzp.io/l/jobsforindia-alerts-1mo",
+    // Replace with your Razorpay Payment Link for ₹99 (3 Months Sprint - Most Popular)
     paymentUrl3Mo: "https://rzp.io/l/jobsforindia-alerts-3mo",
-    // Replace with your Razorpay Payment Link for ₹99 (1 Year)
-    paymentUrl1Yr: "https://rzp.io/l/jobsforindia-alerts-1yr",
     // Optional Webhook / Formspree / Google Form URL to store subscriber emails
     // (e.g., https://formspree.io/f/YOUR_FORM_ID or your Google Apps Script URL)
     subscriberWebhookUrl: "",

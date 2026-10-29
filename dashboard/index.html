@@ -316,7 +316,7 @@
         <div>
           <div class="flex items-center gap-2 justify-center sm:justify-start">
             <span class="text-xs sm:text-sm font-extrabold text-slate-900">Never miss a direct ATS job drop</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">VIP Pass: ₹49 / 3 mos</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Starter: ₹49/mo • 3-Mo Sprint: ₹99</span>
           </div>
           <p class="text-xs text-slate-600 mt-0.5">
             Get personalized daily alerts direct to your inbox or Telegram before postings are flooded on LinkedIn.
@@ -960,28 +960,31 @@
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Choose Alert Frequency & Plan</label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <!-- VIP 3-Month Plan -->
-            <label class="relative flex flex-col p-3 rounded-2xl border-2 border-amber-400 bg-amber-50/60 cursor-pointer hover:border-amber-500 transition">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-black text-amber-950 flex items-center gap-1">
-                  <input type="radio" name="alert_plan" value="vip3mo" checked class="accent-amber-600">
-                  <span>⭐ VIP Pass (3 Mos)</span>
-                </span>
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500 text-white shadow-2xs">₹49</span>
-              </div>
-              <p class="text-[11px] text-slate-600 mt-1 pl-4">Daily instant alerts • Direct ATS links • Just ₹16/month</p>
-            </label>
-
-            <!-- VIP 1-Year Plan -->
+            <!-- 1-Month Starter Plan -->
             <label class="relative flex flex-col p-3 rounded-2xl border border-slate-200 bg-white cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-800 flex items-center gap-1">
-                  <input type="radio" name="alert_plan" value="vip1yr" class="accent-amber-600">
-                  <span>💎 Annual VIP (1 Yr)</span>
+                  <input type="radio" name="alert_plan" value="vip1mo" class="accent-amber-600">
+                  <span>⚡ 1-Month Starter</span>
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-600 text-white shadow-2xs">₹99</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-800 text-white shadow-2xs">₹49</span>
               </div>
-              <p class="text-[11px] text-slate-600 mt-1 pl-4">Full year coverage + Exclusive referral alerts (Save 50%)</p>
+              <p class="text-[11px] text-slate-500 mt-1 pl-4">30-day interview sprint • Direct ATS links (₹49/mo)</p>
+            </label>
+
+            <!-- 3-Month Complete Sprint (Decoy Hero Plan) -->
+            <label class="relative flex flex-col p-3 rounded-2xl border-2 border-amber-500 bg-amber-50/70 cursor-pointer shadow-xs hover:border-amber-600 transition">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-amber-950 flex items-center gap-1">
+                  <input type="radio" name="alert_plan" value="vip3mo" checked class="accent-amber-600">
+                  <span>⭐ 3-Month Sprint</span>
+                </span>
+                <div class="flex items-center gap-1">
+                  <span class="px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">Save 33%</span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500 text-white shadow-2xs">₹99</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-amber-900/90 font-medium mt-1 pl-4">Full hiring cycle • Just ₹33/month (Most Popular 🔥)</p>
             </label>
           </div>
           
@@ -1006,7 +1009,7 @@
 
         <!-- Submit Button -->
         <button type="submit" id="alert-submit-btn" class="w-full py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-sm rounded-xl transition shadow-md hover:shadow-lg focus:ring-2 focus:ring-amber-500 cursor-pointer">
-          Activate VIP Alerts • ₹49 ⚡
+          Activate 3-Month VIP Sprint • ₹99 ⚡
         </button>
       </form>
     </div>

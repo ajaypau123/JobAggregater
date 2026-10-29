@@ -1880,10 +1880,10 @@ function updateAlertSubmitBtnText() {
   if (!alertSubmitBtn) return;
   const selectedPlan = document.querySelector('input[name="alert_plan"]:checked');
   const planVal = selectedPlan ? selectedPlan.value : 'vip3mo';
-  if (planVal === 'vip3mo') {
-    alertSubmitBtn.textContent = 'Activate VIP Alerts • ₹49 ⚡';
-  } else if (planVal === 'vip1yr') {
-    alertSubmitBtn.textContent = 'Activate Annual VIP • ₹99 ⚡';
+  if (planVal === 'vip1mo') {
+    alertSubmitBtn.textContent = 'Activate 1-Month Starter • ₹49 ⚡';
+  } else if (planVal === 'vip3mo') {
+    alertSubmitBtn.textContent = 'Activate 3-Month VIP Sprint • ₹99 ⚡ (Save 33%)';
   } else {
     alertSubmitBtn.textContent = 'Subscribe to Free Weekly Digest ✉️';
   }
@@ -1952,14 +1952,14 @@ window.submitJobAlerts = function() {
   closeJobAlertsModal();
 
   // 3. Trigger Payment for VIP or Confirmation for Free
-  if (plan === 'vip3mo') {
+  if (plan === 'vip1mo') {
+    const payUrl = (cfg && cfg.paymentUrl1Mo) ? cfg.paymentUrl1Mo : 'https://rzp.io/l/jobsforindia-alerts-1mo';
+    window.open(payUrl, '_blank', 'noopener,noreferrer');
+    showToast('🎉 Preferences saved! Opening ₹49 Razorpay 1-Month Starter checkout.');
+  } else if (plan === 'vip3mo') {
     const payUrl = (cfg && cfg.paymentUrl3Mo) ? cfg.paymentUrl3Mo : 'https://rzp.io/l/jobsforindia-alerts-3mo';
     window.open(payUrl, '_blank', 'noopener,noreferrer');
-    showToast('🎉 Preferences saved! Opening ₹49 Razorpay VIP Pass checkout.');
-  } else if (plan === 'vip1yr') {
-    const payUrl = (cfg && cfg.paymentUrl1Yr) ? cfg.paymentUrl1Yr : 'https://rzp.io/l/jobsforindia-alerts-1yr';
-    window.open(payUrl, '_blank', 'noopener,noreferrer');
-    showToast('🎉 Preferences saved! Opening ₹99 Annual VIP Pass checkout.');
+    showToast('🎉 Preferences saved! Opening ₹99 Razorpay 3-Month VIP Sprint checkout.');
   } else {
     showToast('🎉 Subscribed to Free Weekly Digest! Check your inbox.');
   }
