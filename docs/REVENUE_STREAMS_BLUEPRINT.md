@@ -211,3 +211,4 @@ An email list and Telegram channel create a direct, unblockable broadcast channe
 2. **Diversify Income:** Relying on a single revenue model is risky. Blending **Employer Posts (Direct)** with **CPC Apply Clicks & Affiliates (Indirect)** creates a resilient, multi-stream cash flow.
 3. **Low Friction, High Volume:** A ₹1,999 employer post is 8x cheaper than LinkedIn, making it an easy sell to Indian tech startups.
 4. **Zero Overhead:** Because the platform runs on GitHub Pages and Actions, virtually every rupee earned translates directly to pure operating profit.
+

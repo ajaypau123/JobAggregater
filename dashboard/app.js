@@ -1830,6 +1830,180 @@ document.addEventListener('keydown', e => {
 });
 
 
+
+// ============================================================
+// VIP JOB ALERTS & SUBSCRIBER ENGINE
+// ============================================================
+const jobAlertsModal = document.getElementById('job-alerts-modal');
+const jobAlertsCloseBtn = document.getElementById('job-alerts-close-btn');
+const headerAlertsBtn = document.getElementById('header-job-alerts-btn');
+const bannerAlertsBtn = document.getElementById('banner-job-alerts-btn');
+const modalAlertRoleBtn = document.getElementById('modal-alert-role-btn');
+const alertForm = document.getElementById('job-alerts-form');
+const alertRoleSelect = document.getElementById('alert-role-category');
+const alertKeywordsInput = document.getElementById('alert-keywords');
+const alertSubmitBtn = document.getElementById('alert-submit-btn');
+const alertPhoneWrapper = document.getElementById('alert-phone-wrapper');
+const alertFreeDigestBtn = document.getElementById('alert-free-digest-btn');
+
+window.openJobAlertsModal = function(prefillCategory = null, prefillKeyword = null) {
+  if (!jobAlertsModal) return;
+  if (prefillCategory && alertRoleSelect) {
+    alertRoleSelect.value = prefillCategory;
+  }
+  if (prefillKeyword && alertKeywordsInput) {
+    alertKeywordsInput.value = prefillKeyword;
+  }
+  jobAlertsModal.classList.remove('hidden');
+  const emailInput = document.getElementById('alert-email');
+  if (emailInput) setTimeout(() => emailInput.focus(), 100);
+};
+
+window.closeJobAlertsModal = function() {
+  if (jobAlertsModal) jobAlertsModal.classList.add('hidden');
+};
+
+// Toggle Phone input when Telegram or WhatsApp channel is selected
+document.querySelectorAll('input[name="alert_channel"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    if (!alertPhoneWrapper) return;
+    if (e.target.value === 'telegram' || e.target.value === 'whatsapp') {
+      alertPhoneWrapper.classList.remove('hidden');
+    } else {
+      alertPhoneWrapper.classList.add('hidden');
+    }
+  });
+});
+
+// Update Submit Button Text based on Plan Selection
+function updateAlertSubmitBtnText() {
+  if (!alertSubmitBtn) return;
+  const selectedPlan = document.querySelector('input[name="alert_plan"]:checked');
+  const planVal = selectedPlan ? selectedPlan.value : 'vip3mo';
+  if (planVal === 'vip3mo') {
+    alertSubmitBtn.textContent = 'Activate VIP Alerts • ₹49 ⚡';
+  } else if (planVal === 'vip1yr') {
+    alertSubmitBtn.textContent = 'Activate Annual VIP • ₹99 ⚡';
+  } else {
+    alertSubmitBtn.textContent = 'Subscribe to Free Weekly Digest ✉️';
+  }
+}
+
+document.querySelectorAll('input[name="alert_plan"]').forEach(radio => {
+  radio.addEventListener('change', updateAlertSubmitBtnText);
+});
+
+if (alertFreeDigestBtn) {
+  alertFreeDigestBtn.addEventListener('click', () => {
+    // Uncheck radio plans and set to free
+    const checked = document.querySelector('input[name="alert_plan"]:checked');
+    if (checked) checked.checked = false;
+    if (alertSubmitBtn) alertSubmitBtn.textContent = 'Subscribe to Free Weekly Digest ✉️';
+    showToast('Switched to Free Weekly Digest mode.');
+  });
+}
+
+window.submitJobAlerts = function() {
+  const email = (document.getElementById('alert-email')?.value || '').trim();
+  const roleCategory = document.getElementById('alert-role-category')?.value || 'all';
+  const keywords = (document.getElementById('alert-keywords')?.value || '').trim();
+  const location = document.getElementById('alert-location')?.value || 'any';
+  const exp = document.getElementById('alert-exp')?.value || 'all';
+  const channel = document.querySelector('input[name="alert_channel"]:checked')?.value || 'email';
+  const phone = (document.getElementById('alert-phone')?.value || '').trim();
+  const selectedPlanEl = document.querySelector('input[name="alert_plan"]:checked');
+  const plan = selectedPlanEl ? selectedPlanEl.value : 'free_digest';
+
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email address.');
+    return;
+  }
+
+  const subscriberProfile = {
+    email: email,
+    phone: phone,
+    roleCategory: roleCategory,
+    keywords: keywords,
+    location: location,
+    experience: exp,
+    channel: channel,
+    plan: plan,
+    subscribedAt: new Date().toISOString()
+  };
+
+  // 1. Save to local storage for fast client-side recall
+  try {
+    localStorage.setItem('techjobs_alert_subscriber', JSON.stringify(subscriberProfile));
+  } catch (e) {}
+
+  // 2. Post to Webhook / Google Form if configured in MONETIZATION_CONFIG
+  const cfg = window.MONETIZATION_CONFIG && window.MONETIZATION_CONFIG.jobAlerts;
+  if (cfg && cfg.subscriberWebhookUrl) {
+    try {
+      fetch(cfg.subscriberWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscriberProfile),
+        mode: 'no-cors'
+      }).catch(() => {});
+    } catch (err) {}
+  }
+
+  closeJobAlertsModal();
+
+  // 3. Trigger Payment for VIP or Confirmation for Free
+  if (plan === 'vip3mo') {
+    const payUrl = (cfg && cfg.paymentUrl3Mo) ? cfg.paymentUrl3Mo : 'https://rzp.io/l/jobsforindia-alerts-3mo';
+    window.open(payUrl, '_blank', 'noopener,noreferrer');
+    showToast('🎉 Preferences saved! Opening ₹49 Razorpay VIP Pass checkout.');
+  } else if (plan === 'vip1yr') {
+    const payUrl = (cfg && cfg.paymentUrl1Yr) ? cfg.paymentUrl1Yr : 'https://rzp.io/l/jobsforindia-alerts-1yr';
+    window.open(payUrl, '_blank', 'noopener,noreferrer');
+    showToast('🎉 Preferences saved! Opening ₹99 Annual VIP Pass checkout.');
+  } else {
+    showToast('🎉 Subscribed to Free Weekly Digest! Check your inbox.');
+  }
+};
+
+// Bind Alert Buttons
+if (headerAlertsBtn) headerAlertsBtn.addEventListener('click', () => openJobAlertsModal());
+if (bannerAlertsBtn) bannerAlertsBtn.addEventListener('click', () => openJobAlertsModal());
+if (jobAlertsCloseBtn) jobAlertsCloseBtn.addEventListener('click', closeJobAlertsModal);
+if (jobAlertsModal) {
+  jobAlertsModal.addEventListener('click', e => {
+    if (e.target === jobAlertsModal) closeJobAlertsModal();
+  });
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && jobAlertsModal && !jobAlertsModal.classList.contains('hidden')) {
+    closeJobAlertsModal();
+  }
+});
+
+// Modal "Alert Similar Roles" Button
+if (modalAlertRoleBtn) {
+  modalAlertRoleBtn.addEventListener('click', () => {
+    const jobTitle = document.getElementById('modal-title')?.textContent || '';
+    const jobComp = document.getElementById('modal-company')?.textContent || '';
+    closeModal();
+    
+    // Auto-detect role category
+    const t = jobTitle.toLowerCase();
+    let cat = 'all';
+    if (/qa|test|quality|automation|sdet/.test(t)) cat = 'qa';
+    else if (/react|frontend|front-end|vue|angular|ui/.test(t)) cat = 'frontend';
+    else if (/backend|back-end|node|python|java|golang|go|rust|c\+\+|spring/.test(t)) cat = 'backend';
+    else if (/fullstack|full-stack|full stack/.test(t)) cat = 'fullstack';
+    else if (/devops|sre|cloud|aws|kubernetes|k8s|infra/.test(t)) cat = 'devops';
+    else if (/data|ml|ai|machine learning|analytics|bi/.test(t)) cat = 'data';
+    else if (/mobile|ios|android|flutter|react native/.test(t)) cat = 'mobile';
+    else if (/product|design|ui\/ux|ux/.test(t)) cat = 'product';
+
+    openJobAlertsModal(cat, jobTitle);
+  });
+}
+
+
 // ============================================================
 // DYNAMIC MONETIZATION & AFFILIATE WIRING
 // ============================================================

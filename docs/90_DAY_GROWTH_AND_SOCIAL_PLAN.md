@@ -195,3 +195,4 @@ Track your weekly progress against these three indicators:
 Your technical engine runs at **₹0 cost**. You have no monthly bills forcing you to close down.
 
 If you execute this 15-minute routine every day for 90 days, you will build an undeniable, compounding digital media and career asset that pays you for months and years to come.
+

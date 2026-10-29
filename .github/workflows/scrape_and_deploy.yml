@@ -41,6 +41,22 @@ jobs:
         run: |
           python -m aggregator.main --india
 
+      - name: Dispatch Subscriber Job Alerts
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SUBSCRIBERS_DATA: ${{ secrets.SUBSCRIBERS_DATA }}
+        run: |
+          if [ -n "$RESEND_API_KEY" ] || [ -n "$SMTP_USER" ]; then
+            python -m aggregator.alerts.dispatcher
+          else
+            echo "No email credentials configured. Running alerts dry-run verification..."
+            python -m aggregator.alerts.dispatcher --dry-run
+          fi
+
       - name: Commit & Push Updated Dashboard Feed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"

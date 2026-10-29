@@ -83,5 +83,37 @@ window.MONETIZATION_CONFIG = {
     whatsappGroupUrl: "https://chat.whatsapp.com/invite_placeholder",
     title: "Instant Job Drop Alerts",
     subtitle: "Get notified the minute top tech openings go live in India"
+  },
+
+  // ============================================================
+  // 6. VIP JOB ALERTS & SUBSCRIBER PASS (Micro-Subscription)
+  // Direct ATS alerts to Email / Telegram / WhatsApp
+  // Candidates pay ₹49 for 3 months or ₹99 for 1 year
+  // Create free Razorpay Payment Links at: https://dashboard.razorpay.com/app/payment-links
+  // ============================================================
+  jobAlerts: {
+    enabled: true,
+    title: "Instant Tech Job Alerts",
+    headline: "Never Miss a Job Drop Again",
+    subtitle: "Get verified direct ATS roles matching your skills sent straight to your inbox.",
+    pricing: {
+      vip3MoInr: 49,
+      vip1YrInr: 99,
+      freeTierEnabled: true
+    },
+    // Replace with your Razorpay Payment Link for ₹49 (3 Months)
+    paymentUrl3Mo: "https://rzp.io/l/jobsforindia-alerts-3mo",
+    // Replace with your Razorpay Payment Link for ₹99 (1 Year)
+    paymentUrl1Yr: "https://rzp.io/l/jobsforindia-alerts-1yr",
+    // Optional Webhook / Formspree / Google Form URL to store subscriber emails
+    // (e.g., https://formspree.io/f/YOUR_FORM_ID or your Google Apps Script URL)
+    subscriberWebhookUrl: "",
+    perks: [
+      "Daily email alerts matching your exact role, city & tech stack",
+      "100% Direct ATS apply links (Greenhouse, Lever, Ashby, Workday)",
+      "Early bird advantage: apply in the first 60 minutes before LinkedIn gets saturated",
+      "Zero recruiter consultancy spam, 100% verified companies"
+    ]
   }
 };
+
