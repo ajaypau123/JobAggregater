@@ -834,9 +834,15 @@ function renderJobCards() {
 
           <!-- Company Avatar & Job Title -->
           <div class="flex items-start gap-3.5 mt-1">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${avatarGrad} flex items-center justify-center text-white font-extrabold text-base shrink-0 shadow-sm mt-0.5 relative overflow-hidden group-hover:scale-105 transition-transform">
-              <img src="${logoUrl}" alt="${escapeHtml(job.company)}" class="w-full h-full object-cover p-1 bg-white" onerror="this.remove();">
-              <span class="text-sm font-black text-white">${companyInitial}</span>
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${avatarGrad} flex items-center justify-center text-white font-extrabold text-base shrink-0 shadow-xs mt-0.5 relative overflow-hidden group-hover:scale-105 transition-transform border border-slate-200/60 bg-white">
+              <span class="text-base font-black text-white select-none">${companyInitial}</span>
+              <img 
+                src="${logoUrl}" 
+                alt="${escapeHtml(job.company)}" 
+                class="absolute inset-0 w-full h-full object-contain p-2 bg-white transition-opacity" 
+                loading="lazy" 
+                onerror="this.remove();"
+              >
             </div>
             <div class="flex-grow min-w-0">
               <h3 id="job-title-${idx}" class="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors leading-snug line-clamp-2">
