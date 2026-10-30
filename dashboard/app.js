@@ -132,7 +132,7 @@ const state = {
   companyFilter: 'all',
   workplaceFilter: 'all',
   cityFilter: 'all',
-  dateFilter: 'all',
+  dateFilter: '21',
   sortBy: 'newest',
   currentPage: 1,
   itemsPerPage: 18,
@@ -592,13 +592,13 @@ function applyFilters() {
       }
     }
 
-    // 13. Date Posted ("Freshness") Dropdown
-    if (state.dateFilter !== 'all') {
-      const maxDays = parseInt(state.dateFilter, 10);
+    // 13. Date Posted ("Freshness") Dropdown (Prunes stale jobs > 21 days by default)
+    if (state.dateFilter !== 'any') {
+      const maxDays = parseInt(state.dateFilter, 10) || 21;
       if (job.posted_date) {
         try {
           const postedMs = new Date(job.posted_date).getTime();
-          const nowMs = new Date().getTime();
+          const nowMs = Date.now();
           const ageDays = (nowMs - postedMs) / (1000 * 3600 * 24);
           if (ageDays > maxDays) return false;
         } catch (e) {}
@@ -619,6 +619,89 @@ function applyFilters() {
 
   state.filteredJobs = results;
   renderJobCards();
+}
+
+// ============================================================
+// ATS BRANDING & DATA FRESHNESS HELPERS
+// ============================================================
+function getAtsBadgeInfo(job) {
+  const url = (job.direct_apply_url || job.apply_url || '').toLowerCase();
+  const src = (job.source || '').toLowerCase();
+
+  if (url.includes('greenhouse.io') || src.includes('greenhouse')) {
+    return {
+      text: '🟢 Direct Greenhouse ATS',
+      className: 'bg-emerald-50 text-emerald-800 border border-emerald-200/90'
+    };
+  }
+  if (url.includes('lever.co') || src.includes('lever')) {
+    return {
+      text: '🟣 Direct Lever ATS',
+      className: 'bg-purple-50 text-purple-800 border border-purple-200/90'
+    };
+  }
+  if (url.includes('workday') || url.includes('myworkdayjobs') || src.includes('workday')) {
+    return {
+      text: '🟠 Direct Workday ATS',
+      className: 'bg-amber-50 text-amber-900 border border-amber-300/80'
+    };
+  }
+  if (url.includes('ashby') || src.includes('ashby')) {
+    return {
+      text: '🔵 Direct Ashby ATS',
+      className: 'bg-sky-50 text-sky-800 border border-sky-200/90'
+    };
+  }
+  if (url.includes('smartrecruiters') || src.includes('smartrecruiters')) {
+    return {
+      text: '🔷 Direct SmartRecruiters ATS',
+      className: 'bg-cyan-50 text-cyan-800 border border-cyan-200/90'
+    };
+  }
+  if (url.includes('amazon.jobs') || src.includes('amazon')) {
+    return {
+      text: '🟡 Direct Amazon ATS',
+      className: 'bg-yellow-50 text-yellow-900 border border-yellow-300/80'
+    };
+  }
+  if (job.is_direct_ats) {
+    return {
+      text: '🎯 Direct Company ATS',
+      className: 'bg-teal-50 text-teal-800 border border-teal-200/90'
+    };
+  }
+  return {
+    text: `📡 ${job.source || 'Aggregated'}`,
+    className: 'bg-slate-100 text-slate-700 border border-slate-200/70'
+  };
+}
+
+function formatFreshness(isoDate) {
+  if (!isoDate) return 'Recently Verified';
+  try {
+    const postedTime = new Date(isoDate).getTime();
+    const nowTime = Date.now();
+    const diffMs = nowTime - postedTime;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffHours < 1) {
+      return '⚡ Verified today';
+    } else if (diffHours < 24) {
+      return `⚡ Verified ${diffHours}h ago`;
+    } else if (diffDays === 1) {
+      return 'Verified yesterday';
+    } else if (diffDays <= 7) {
+      return `Posted ${diffDays} days ago`;
+    } else if (diffDays <= 21) {
+      return `Posted ${diffDays}d ago`;
+    } else {
+      const d = new Date(isoDate);
+      return `Posted on ${d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`;
+    }
+  } catch (e) {
+    return 'Recently';
+  }
 }
 
 // ============================================================
@@ -666,7 +749,8 @@ function renderJobCards() {
     const isDirectAts = job.is_direct_ats;
     const directUrl = job.direct_apply_url || job.apply_url;
     const location = job.location || 'Remote';
-    const posted = job.posted_date ? formatDate(job.posted_date) : 'Recently';
+    const posted = formatFreshness(job.posted_date);
+    const atsBadge = getAtsBadgeInfo(job);
     const cleanDesc = stripHtml(job.description || '');
     const snippet = cleanDesc.length > 160 ? cleanDesc.substring(0, 160) + '...' : cleanDesc;
     const isSaved = state.savedJobIds.has(job.job_id);
@@ -724,12 +808,8 @@ function renderJobCards() {
         <div>
           <!-- Header Badges & Actions -->
           <div class="flex items-center justify-between gap-2 mb-3.5">
-            <span class="text-xs font-bold px-3 py-1 rounded-full ${
-              isDirectAts 
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80' 
-                : 'bg-slate-100 text-slate-700 border border-slate-200/60'
-            }">
-              ${isDirectAts ? '🎯 Direct Company ATS' : `📡 ${job.source}`}
+            <span class="text-xs font-bold px-3 py-1 rounded-full ${atsBadge.className}">
+              ${atsBadge.text}
             </span>
 
             <div class="flex items-center gap-1.5">
@@ -822,6 +902,15 @@ function renderJobCards() {
               aria-label="Share on WhatsApp"
             >
               💬
+            </button>
+            <button
+              type="button"
+              onclick="reportJobClosed('${job.job_id}', event)"
+              class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition cursor-pointer flex items-center justify-center text-xs"
+              title="Report broken or expired ATS link"
+              aria-label="Report expired link"
+            >
+              🚩
             </button>
           </div>
 
@@ -958,7 +1047,7 @@ window.openJobModal = function(jobId) {
   elements.modalTitle.textContent = job.title || 'Untitled Role';
   elements.modalCompany.textContent = job.company || 'Company';
   elements.modalLocation.textContent = `📍 ${job.location || 'Remote'}`;
-  elements.modalPosted.textContent = `📅 ${job.posted_date ? formatDate(job.posted_date) : 'Recently'}`;
+  elements.modalPosted.textContent = `📅 ${formatFreshness(job.posted_date)}`;
   elements.modalSource.textContent = job.source || 'Aggregator';
   elements.modalApplyBtn.href = directUrl;
   elements.modalApplyBtn.onclick = (e) => {
@@ -966,13 +1055,12 @@ window.openJobModal = function(jobId) {
     handleApplyClick(job.job_id, directUrl, e);
   };
 
+  const modalAtsBadge = getAtsBadgeInfo(job);
+  elements.modalBadgeAts.className = `inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${modalAtsBadge.className} mb-2`;
+  elements.modalBadgeAts.textContent = modalAtsBadge.text;
   if (isDirectAts) {
-    elements.modalBadgeAts.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-2';
-    elements.modalBadgeAts.textContent = '🎯 Direct Company ATS Portal (Greenhouse / Lever)';
     elements.modalApplyBtn.textContent = 'Apply on Company Site ↗';
   } else {
-    elements.modalBadgeAts.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 mb-2';
-    elements.modalBadgeAts.textContent = `📡 Via ${job.source} Portal`;
     elements.modalApplyBtn.textContent = 'Apply via Listing ↗';
   }
 
@@ -1143,11 +1231,14 @@ window.toggleAppliedJob = function(jobId, event) {
   showToast('🎉 Marked as Applied! ✓');
 };
 
-window.reportJobClosed = function(jobId) {
-  if (!confirm('Report this job posting as closed or expired? It will be hidden from your feed.')) return;
+window.reportJobClosed = function(jobId, event) {
+  if (event) event.stopPropagation();
+  if (!confirm('Report this job posting as closed or expired? It will be immediately hidden from your feed.')) return;
   state.reportedJobIds.add(jobId);
-  localStorage.setItem(STORAGE_KEYS.REPORTED, JSON.stringify([...state.reportedJobIds]));
-  showToast('Thank you! Job reported and hidden.');
+  try {
+    localStorage.setItem(STORAGE_KEYS.REPORTED, JSON.stringify([...state.reportedJobIds]));
+  } catch (e) {}
+  showToast('🚩 Thank you! Job flagged as expired and hidden.');
   closeJobModal();
   applyFilters(false);
 };
@@ -1646,7 +1737,7 @@ elements.resetFiltersBtn.addEventListener('click', () => {
   state.companyFilter = 'all';
   state.workplaceFilter = 'all';
   state.cityFilter = 'all';
-  state.dateFilter = 'all';
+  state.dateFilter = '21';
   state.directAtsOnly = false;
   state.indiaLocalOnly = false;
   state.remoteOnly = false;
@@ -1662,7 +1753,7 @@ elements.resetFiltersBtn.addEventListener('click', () => {
   if (elements.companySelect) elements.companySelect.value = 'all';
   elements.workplaceSelect.value = 'all';
   if (elements.citySelect) elements.citySelect.value = 'all';
-  if (elements.dateSelect) elements.dateSelect.value = 'all';
+  if (elements.dateSelect) elements.dateSelect.value = '21';
   if (elements.itemsPerPageSelect) elements.itemsPerPageSelect.value = '18';
   elements.directAtsCheckbox.checked = false;
   elements.indiaLocalCheckbox.checked = false;
@@ -2010,6 +2101,22 @@ if (modalAlertRoleBtn) {
 function initMonetization() {
   if (!window.MONETIZATION_CONFIG) return;
   const cfg = window.MONETIZATION_CONFIG;
+
+  // Footer Contact & Community Wiring
+  const footerEmail = document.getElementById('footer-contact-email');
+  if (footerEmail && cfg.transparency && cfg.transparency.contactEmail) {
+    footerEmail.href = `mailto:${cfg.transparency.contactEmail}`;
+    const spanText = footerEmail.querySelector('span:last-child');
+    if (spanText) spanText.textContent = cfg.transparency.contactEmail;
+  }
+  const footerTg = document.getElementById('footer-tg-link');
+  if (footerTg && cfg.alertsCommunity && cfg.alertsCommunity.telegramChannelUrl) {
+    footerTg.href = cfg.alertsCommunity.telegramChannelUrl;
+  }
+  const footerWa = document.getElementById('footer-wa-link');
+  if (footerWa && cfg.alertsCommunity && cfg.alertsCommunity.whatsappGroupUrl) {
+    footerWa.href = cfg.alertsCommunity.whatsappGroupUrl;
+  }
 
   // Header Telegram Link
   const tgBtn = document.getElementById('header-telegram-btn');
