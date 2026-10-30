@@ -120,7 +120,7 @@ window.MONETIZATION_CONFIG = {
   // 7. FOUNDER TRANSPARENCY, CONTACT & LEGAL DISCLAIMER
   // ============================================================
   transparency: {
-    founderName: "Ajay Paul",
+    initiativeName: "The JobsForIndia Initiative",
     contactEmail: "techjobsforindia@gmail.com",
     disclaimer: "JobsForIndia is an independent aggregator. All job listings, brand names, and company logos belong to their respective owners. JobsForIndia is not affiliated with these employers and never charges candidates for job applications."
   }
