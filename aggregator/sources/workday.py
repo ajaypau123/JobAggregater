@@ -15,7 +15,7 @@ from aggregator.sources.base import BaseJobSource
 
 logger = logging.getLogger(__name__)
 
-MAX_JOBS_PER_COMPANY = 500
+MAX_JOBS_PER_COMPANY = 60
 
 
 def _parse_workday_posted_on(posted_on_text: str | None) -> str | None:

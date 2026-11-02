@@ -1891,15 +1891,13 @@ function openEmployerModal() {
   document.body.classList.add('overflow-hidden');
   const compInput = document.getElementById('emp-company-name');
   if (compInput) compInput.focus();
-}
-window.openEmployerModal = openEmployerModal;
+};
 
 function closeEmployerModal() {
   if (!elements.employerModal) return;
   elements.employerModal.classList.add('hidden');
   document.body.classList.remove('overflow-hidden');
-}
-window.closeEmployerModal = closeEmployerModal;
+};
 
 function submitEmployerJob() {
   const companyEl = document.getElementById('emp-company-name');
@@ -1948,15 +1946,14 @@ function submitEmployerJob() {
   } else {
     showToast('🎉 Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
   }
-}
-window.submitEmployerJob = submitEmployerJob;
+};
 
 // Employer Modal Listeners
 if (elements.employerPostBtn) {
-  elements.employerPostBtn.addEventListener('click', () => openEmployerModal());
+  elements.employerPostBtn.addEventListener('click', openEmployerModal);
 }
 if (elements.employerModalCloseBtn) {
-  elements.employerModalCloseBtn.addEventListener('click', () => closeEmployerModal());
+  elements.employerModalCloseBtn.addEventListener('click', closeEmployerModal);
 }
 if (elements.employerModal) {
   elements.employerModal.addEventListener('click', e => {
@@ -1986,7 +1983,7 @@ const alertSubmitBtn = document.getElementById('alert-submit-btn');
 const alertPhoneWrapper = document.getElementById('alert-phone-wrapper');
 const alertFreeDigestBtn = document.getElementById('alert-free-digest-btn');
 
-function openJobAlertsModal(prefillCategory = null, prefillKeyword = null) {
+window.openJobAlertsModal = function(prefillCategory = null, prefillKeyword = null) {
   if (!jobAlertsModal) return;
   if (prefillCategory && alertRoleSelect) {
     alertRoleSelect.value = prefillCategory;
@@ -1997,13 +1994,11 @@ function openJobAlertsModal(prefillCategory = null, prefillKeyword = null) {
   jobAlertsModal.classList.remove('hidden');
   const emailInput = document.getElementById('alert-email');
   if (emailInput) setTimeout(() => emailInput.focus(), 100);
-}
-window.openJobAlertsModal = openJobAlertsModal;
+};
 
-function closeJobAlertsModal() {
+window.closeJobAlertsModal = function() {
   if (jobAlertsModal) jobAlertsModal.classList.add('hidden');
-}
-window.closeJobAlertsModal = closeJobAlertsModal;
+};
 
 // Toggle Phone input when Telegram or WhatsApp channel is selected
 document.querySelectorAll('input[name="alert_channel"]').forEach(radio => {
@@ -2045,7 +2040,7 @@ if (alertFreeDigestBtn) {
   });
 }
 
-function submitJobAlerts() {
+window.submitJobAlerts = function() {
   const email = (document.getElementById('alert-email')?.value || '').trim();
   const roleCategory = document.getElementById('alert-role-category')?.value || 'all';
   const keywords = (document.getElementById('alert-keywords')?.value || '').trim();
@@ -2105,8 +2100,7 @@ function submitJobAlerts() {
   } else {
     showToast('🎉 Subscribed to Free Weekly Digest! Check your inbox.');
   }
-}
-window.submitJobAlerts = submitJobAlerts;
+};
 
 // Bind Alert Buttons
 if (headerAlertsBtn) headerAlertsBtn.addEventListener('click', () => openJobAlertsModal());
@@ -2202,3 +2196,7 @@ function initMonetization() {
 // Boot App
 fetchJobs();
 
+
+window.openEmployerModal = openEmployerModal;
+window.closeEmployerModal = closeEmployerModal;
+window.submitEmployerJob = submitEmployerJob;

@@ -127,7 +127,6 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Ubisoft", ats_type="smartrecruiters", slug="Ubisoft2", extra_params={"country": "in"}),
     ATSCompany(name="Avery Dennison", ats_type="smartrecruiters", slug="AveryDennison", extra_params={"country": "in"}),
     ATSCompany(name="SGS", ats_type="smartrecruiters", slug="SGS", extra_params={"country": "in"}),
-    ATSCompany(name="Freshworks", ats_type="smartrecruiters", slug="freshworks", extra_params={"country": "in"}),
 ]
 
 
