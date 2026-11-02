@@ -73,13 +73,7 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Glance", ats_type="greenhouse", slug="glance"),
     ATSCompany(name="Motive", ats_type="greenhouse", slug="motive"),
     ATSCompany(name="Ethos Life", ats_type="greenhouse", slug="ethos"),
-    ATSCompany(name="Databricks", ats_type="greenhouse", slug="databricks"),
-    ATSCompany(name="Okta", ats_type="greenhouse", slug="okta"),
-    ATSCompany(name="GitLab", ats_type="greenhouse", slug="gitlab"),
     ATSCompany(name="Druva", ats_type="greenhouse", slug="druva"),
-    ATSCompany(name="MongoDB", ats_type="greenhouse", slug="mongodb"),
-    ATSCompany(name="Elastic", ats_type="greenhouse", slug="elastic"),
-    ATSCompany(name="Twilio", ats_type="greenhouse", slug="twilio"),
 
     # ── Lever ──────────────────────────────────────────────────────────────────
     ATSCompany(name="Paytm", ats_type="lever", slug="paytm"),
@@ -99,12 +93,16 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Gushwork", ats_type="lever", slug="gushwork"),
     ATSCompany(name="Neuron7", ats_type="lever", slug="neuron7"),
     ATSCompany(name="Zimperium", ats_type="lever", slug="zimperium"),
+    ATSCompany(name="Alif Semiconductor", ats_type="lever", slug="alifsemi"),
+    ATSCompany(name="Kobie Marketing", ats_type="lever", slug="kobie"),
 
     # ── Ashby ──────────────────────────────────────────────────────────────────
     ATSCompany(name="Sarvam AI", ats_type="ashby", slug="sarvam"),
     ATSCompany(name="SpotDraft", ats_type="ashby", slug="spotdraft"),
     ATSCompany(name="Ema", ats_type="ashby", slug="ema"),
     ATSCompany(name="AiPrise", ats_type="ashby", slug="aiprise"),
+    ATSCompany(name="Avoca", ats_type="ashby", slug="avoca"),
+    ATSCompany(name="Bolna AI", ats_type="ashby", slug="bolna"),
     ATSCompany(name="Atlan", ats_type="ashby", slug="atlan"),
     ATSCompany(name="Navi", ats_type="ashby", slug="navi"),
     ATSCompany(name="Supabase", ats_type="ashby", slug="supabase"),
@@ -166,4 +164,9 @@ DEFAULT_WORKDAY_COMPANIES: list[WorkdayCompany] = [
     WorkdayCompany(name="Micron Technology", subdomain="micron.wd1", tenant="micron", site="External", country_filter="India"),
     WorkdayCompany(name="Cadence Design", subdomain="cadence.wd1", tenant="cadence", site="External_Careers", country_filter="India"),
     WorkdayCompany(name="Analog Devices", subdomain="analogdevices.wd1", tenant="analogdevices", site="External", country_filter="India"),
+    WorkdayCompany(name="Intel", subdomain="intel.wd1", tenant="intel", site="External", country_filter="India"),
+    WorkdayCompany(name="Applied Materials", subdomain="amat.wd1", tenant="amat", site="External", country_filter="India"),
+    WorkdayCompany(name="PayPal", subdomain="paypal.wd1", tenant="paypal", site="jobs", country_filter="India"),
+    WorkdayCompany(name="Motorola Solutions", subdomain="motorolasolutions.wd5", tenant="motorolasolutions", site="Careers", country_filter="India"),
+    WorkdayCompany(name="NXP Semiconductors", subdomain="nxp.wd3", tenant="nxp", site="careers", country_filter="India"),
 ]
