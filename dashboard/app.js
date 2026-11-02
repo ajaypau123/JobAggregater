@@ -132,7 +132,7 @@ const state = {
   companyFilter: 'all',
   workplaceFilter: 'all',
   cityFilter: 'all',
-  dateFilter: '21',
+  dateFilter: 'any',
   sortBy: 'newest',
   currentPage: 1,
   itemsPerPage: 18,
@@ -619,6 +619,28 @@ function applyFilters() {
 
   state.filteredJobs = results;
   renderJobCards();
+
+  // Update mobile active filters count badge
+  const mobileActiveBadge = document.getElementById('mobile-filter-active-count');
+  if (mobileActiveBadge) {
+    let activeCount = 0;
+    if (state.activeRoleFilter && state.activeRoleFilter !== 'all') activeCount++;
+    if (state.expFilter && state.expFilter !== 'all') activeCount++;
+    if (state.cityFilter && state.cityFilter !== 'all') activeCount++;
+    if (state.workplaceFilter && state.workplaceFilter !== 'all') activeCount++;
+    if (state.companyFilter && state.companyFilter !== 'all') activeCount++;
+    if (state.directAtsOnly) activeCount++;
+    if (state.indiaLocalOnly) activeCount++;
+    if (state.remoteOnly) activeCount++;
+    if (state.searchQuery) activeCount++;
+
+    if (activeCount > 0) {
+      mobileActiveBadge.textContent = activeCount;
+      mobileActiveBadge.classList.remove('hidden');
+    } else {
+      mobileActiveBadge.classList.add('hidden');
+    }
+  }
 }
 
 // ============================================================
@@ -877,28 +899,28 @@ function renderJobCards() {
           </p>
         </div>
 
-        <!-- Action CTAs -->
-        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-          <div class="flex items-center gap-1.5">
+        <!-- Action CTAs (Mobile Responsive Layout) -->
+        <div class="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-1.5 sm:gap-2">
+          <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button 
               type="button" 
               onclick="openJobModal('${job.job_id}')"
-              class="text-xs sm:text-sm font-semibold text-slate-600 hover:text-brand-600 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition focus:ring-2 focus:ring-brand-500 cursor-pointer"
+              class="text-xs font-semibold text-slate-700 hover:text-brand-600 bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 transition cursor-pointer"
               aria-label="View details for ${escapeHtml(job.title)}"
             >
-              Details ↗
+              Details
             </button>
             <button
               type="button"
               onclick="toggleAppliedJob('${job.job_id}', event)"
-              class="text-xs font-semibold px-2 py-1.5 rounded-lg border transition cursor-pointer flex items-center gap-1 ${
+              class="text-xs font-semibold px-2 sm:px-2.5 py-1.5 rounded-lg border transition cursor-pointer flex items-center gap-1 ${
                 isApplied 
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' 
                   : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
               }"
               title="${isApplied ? 'Application marked as submitted' : 'Mark as applied'}"
             >
-              ${isApplied ? '✓' : '+'} Applied
+              ${isApplied ? '✓ Done' : '+ Applied'}
             </button>
             <button
               type="button"
@@ -909,23 +931,14 @@ function renderJobCards() {
             >
               💬
             </button>
-            <button
-              type="button"
-              onclick="reportJobClosed('${job.job_id}', event)"
-              class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition cursor-pointer flex items-center justify-center text-xs"
-              title="Report broken or expired ATS link"
-              aria-label="Report expired link"
-            >
-              🚩
-            </button>
           </div>
 
           <button 
             type="button" 
             onclick="handleApplyClick('${job.job_id}', '${escapeHtml(directUrl)}', event)"
-            class="inline-flex items-center justify-center px-3.5 py-2 text-xs sm:text-sm font-bold text-white ${
+            class="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white shrink-0 ${
               isApplied ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-brand-600 hover:bg-brand-700'
-            } rounded-xl shadow-xs transition hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer"
+            } rounded-xl shadow-xs transition hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer whitespace-nowrap"
             aria-label="${isApplied ? 'Revisit application for' : 'Apply directly for'} ${escapeHtml(job.title)} at ${escapeHtml(job.company)}"
           >
             ${isApplied ? '✓ Applied ↗' : 'Apply ↗'}
@@ -1106,27 +1119,27 @@ function updateModalTrackerButtons() {
   if (elements.modalSaveText) elements.modalSaveText.textContent = isSaved ? 'Saved' : 'Save';
   if (elements.modalSaveBtn) {
     elements.modalSaveBtn.className = isSaved 
-      ? 'px-3.5 py-2.5 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-semibold text-amber-800 hover:bg-amber-100 transition shadow-2xs focus:ring-2 focus:ring-amber-500 flex items-center gap-1 cursor-pointer'
-      : 'px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer';
+      ? 'p-2 sm:px-3.5 sm:py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-semibold text-amber-800 hover:bg-amber-100 transition shadow-2xs focus:ring-2 focus:ring-amber-500 flex items-center justify-center gap-1 cursor-pointer shrink-0'
+      : 'p-2 sm:px-3.5 sm:py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center justify-center gap-1 cursor-pointer shrink-0';
   }
 
   if (elements.modalAppliedIcon) elements.modalAppliedIcon.textContent = isApplied ? '✓' : '+';
   if (elements.modalAppliedText) elements.modalAppliedText.textContent = isApplied ? 'Applied' : 'Mark Applied';
   if (elements.modalAppliedBtn) {
     elements.modalAppliedBtn.className = isApplied 
-      ? 'px-3.5 py-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs focus:ring-2 focus:ring-emerald-500 flex items-center gap-1 cursor-pointer'
-      : 'px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer';
+      ? 'p-2 sm:px-3.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs focus:ring-2 focus:ring-emerald-500 flex items-center justify-center gap-1 cursor-pointer shrink-0'
+      : 'p-2 sm:px-3.5 sm:py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center justify-center gap-1 cursor-pointer shrink-0';
     elements.modalAppliedBtn.title = isApplied ? 'Application marked as submitted (permanent)' : 'Mark as applied';
   }
 
   // Update modal apply CTA button
   if (elements.modalApplyBtn) {
     if (isApplied) {
-      elements.modalApplyBtn.className = 'px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs hover:shadow focus:ring-2 focus:ring-emerald-500 cursor-pointer flex items-center gap-1.5';
+      elements.modalApplyBtn.className = 'flex-1 px-4 py-2.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-md hover:shadow-lg focus:ring-2 focus:ring-emerald-500 cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap text-center';
       elements.modalApplyBtn.textContent = '✓ Applied (Reopen ATS) ↗';
     } else {
-      elements.modalApplyBtn.className = 'px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs hover:shadow focus:ring-2 focus:ring-brand-500 cursor-pointer flex items-center gap-1.5';
-      elements.modalApplyBtn.textContent = state.selectedJob.is_direct_ats ? 'Apply on Company Site ↗' : 'Apply via Listing ↗';
+      elements.modalApplyBtn.className = 'flex-1 px-4 py-2.5 sm:py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-md hover:shadow-lg focus:ring-2 focus:ring-brand-500 cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap text-center';
+      elements.modalApplyBtn.textContent = state.selectedJob.is_direct_ats ? 'Apply on Official Site ↗' : 'Apply via Listing ↗';
     }
   }
 }
@@ -1446,9 +1459,9 @@ elements.clearSearchBtn.addEventListener('click', () => {
 elements.filterPills.forEach(pill => {
   pill.addEventListener('click', () => {
     elements.filterPills.forEach(p => {
-      p.className = 'filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
+      p.className = 'filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
     });
-    pill.className = 'filter-pill active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
+    pill.className = 'filter-pill active shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
     state.activeRoleFilter = pill.dataset.filter;
     if (elements.roleSelect) {
       elements.roleSelect.value = state.activeRoleFilter;
@@ -1463,9 +1476,9 @@ if (elements.roleSelect) {
     state.activeRoleFilter = e.target.value;
     elements.filterPills.forEach(p => {
       if (p.dataset.filter === state.activeRoleFilter) {
-        p.className = 'filter-pill active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
+        p.className = 'filter-pill active shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
       } else {
-        p.className = 'filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
+        p.className = 'filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
       }
     });
     applyFilters();
@@ -1743,7 +1756,7 @@ elements.resetFiltersBtn.addEventListener('click', () => {
   state.companyFilter = 'all';
   state.workplaceFilter = 'all';
   state.cityFilter = 'all';
-  state.dateFilter = '21';
+  state.dateFilter = 'any';
   state.directAtsOnly = false;
   state.indiaLocalOnly = false;
   state.remoteOnly = false;
@@ -1759,7 +1772,7 @@ elements.resetFiltersBtn.addEventListener('click', () => {
   if (elements.companySelect) elements.companySelect.value = 'all';
   elements.workplaceSelect.value = 'all';
   if (elements.citySelect) elements.citySelect.value = 'all';
-  if (elements.dateSelect) elements.dateSelect.value = '21';
+  if (elements.dateSelect) elements.dateSelect.value = 'any';
   if (elements.itemsPerPageSelect) elements.itemsPerPageSelect.value = '18';
   elements.directAtsCheckbox.checked = false;
   elements.indiaLocalCheckbox.checked = false;
@@ -1771,11 +1784,38 @@ elements.resetFiltersBtn.addEventListener('click', () => {
 
   elements.filterPills.forEach((p, idx) => {
     p.className = idx === 0 
-      ? 'filter-pill active px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-brand-600 text-white shadow-xs'
-      : 'filter-pill px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200';
+      ? 'filter-pill active shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer'
+      : 'filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
   });
   applyFilters();
 });
+
+// Mobile Filter Toggle Button Listener
+const mobileFilterToggleBtn = document.getElementById('mobile-filter-toggle-btn');
+const filtersGridWrapper = document.getElementById('filters-grid-wrapper');
+const mobileFilterChevron = document.getElementById('mobile-filter-chevron');
+if (mobileFilterToggleBtn && filtersGridWrapper) {
+  mobileFilterToggleBtn.addEventListener('click', () => {
+    const isHidden = filtersGridWrapper.classList.toggle('hidden');
+    if (mobileFilterChevron) {
+      mobileFilterChevron.textContent = isHidden ? '▼ Show' : '▲ Hide';
+    }
+  });
+}
+
+// Mobile Reset Button Listener
+const resetFiltersBtnMobile = document.getElementById('reset-filters-btn-mobile');
+if (resetFiltersBtnMobile) {
+  resetFiltersBtnMobile.addEventListener('click', () => {
+    if (elements.resetFiltersBtn) elements.resetFiltersBtn.click();
+  });
+}
+
+// Mobile Employer Post Job Icon Button
+const employerPostBtnMobile = document.getElementById('employer-post-btn-mobile');
+if (employerPostBtnMobile) {
+  employerPostBtnMobile.addEventListener('click', openEmployerModal);
+}
 
 // Refresh Button
 elements.refreshBtn.addEventListener('click', () => {

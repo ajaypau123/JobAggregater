@@ -137,6 +137,18 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    /* Mobile scrollbar hiding for smooth horizontal swipe rows */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Smooth mobile touch scrolling */
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
   </style>
 </head>
 
@@ -149,17 +161,17 @@
 
   <!-- Header & Navigation (Glassmorphic) -->
   <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs transition-all" role="banner">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 sm:h-20">
         
         <!-- Logo & Branding -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-brand-500/20">
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md shadow-brand-500/20 shrink-0">
             🎯
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">Jobs<span class="text-brand-600">ForIndia</span></span>
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <span class="text-lg sm:text-2xl font-extrabold tracking-tight text-slate-900">Jobs<span class="text-brand-600">ForIndia</span></span>
               <span class="hidden sm:inline-block px-2.5 py-0.5 text-[11px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
                 Direct Apply
               </span>
@@ -169,7 +181,7 @@
         </div>
 
         <!-- Header Actions / Info -->
-        <div class="flex items-center space-x-2 sm:space-x-3">
+        <div class="flex items-center space-x-1.5 sm:space-x-3">
           <!-- Live Pulse Count Badge -->
           <div class="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80">
             <span class="relative flex h-2 w-2">
@@ -190,14 +202,19 @@
           </a>
 
           <!-- Instant Job Alerts CTA Button -->
-          <button id="header-job-alerts-btn" type="button" class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-gradient-to-r from-amber-50 to-orange-50 text-amber-900 border border-amber-300 hover:from-amber-100 hover:to-orange-100 transition shadow-2xs hover:shadow cursor-pointer" title="Get personalized job alerts in your inbox or Telegram">
-            <span>🔔</span> <span>Job Alerts</span>
+          <button id="header-job-alerts-btn" type="button" class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-gradient-to-r from-amber-50 to-orange-50 text-amber-900 border border-amber-300 hover:from-amber-100 hover:to-orange-100 transition shadow-2xs hover:shadow cursor-pointer" title="Get personalized job alerts in your inbox or Telegram">
+            <span>🔔</span> <span class="hidden xs:inline sm:inline">Job </span><span>Alerts</span>
             <span class="px-1.5 py-0.2 rounded-md bg-amber-500 text-white text-[10px] font-black uppercase">₹49</span>
           </button>
 
-          <!-- Employer Post Job CTA -->
-          <button id="employer-post-btn" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:to-indigo-900 text-white shadow-sm hover:shadow transition transform active:scale-95 cursor-pointer" title="Post or feature your job to 10,000+ Indian engineers">
+          <!-- Employer Post Job CTA (Desktop) -->
+          <button id="employer-post-btn" type="button" class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 hover:from-slate-800 hover:to-indigo-900 text-white shadow-sm hover:shadow transition transform active:scale-95 cursor-pointer" title="Post or feature your job to 10,000+ Indian engineers">
             <span>🏢</span> <span>Post a Job • ₹1,999</span>
+          </button>
+
+          <!-- Employer Post Job CTA (Mobile Compact Icon) -->
+          <button id="employer-post-btn-mobile" type="button" class="sm:hidden p-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition cursor-pointer flex items-center gap-1" title="Post a Job (₹1,999)">
+            <span>🏢</span>
           </button>
 
           <button id="refresh-btn" type="button" aria-label="Refresh job listings" class="p-2 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-xl transition-colors focus:ring-2 focus:ring-brand-500" title="Refresh Listings">
@@ -266,42 +283,42 @@
           </div>
         </form>
 
-        <!-- Popular Trending Tags -->
-        <div class="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-3.5 text-xs text-slate-500 font-medium">
-          <span class="text-slate-400 font-semibold mr-1">Trending:</span>
-          <button type="button" class="tag-chip px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('QA Automation')">🧪 QA Automation</button>
-          <button type="button" class="tag-chip px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('SDET')">⚡ SDET</button>
-          <button type="button" class="tag-chip px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('React')">⚛️ React</button>
-          <button type="button" class="tag-chip px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('Python')">🐍 Python</button>
-          <button type="button" class="tag-chip px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('DevOps')">☁️ DevOps</button>
-          <button type="button" class="tag-chip px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('Remote')">🌐 Remote</button>
+        <!-- Popular Trending Tags (Swipeable on Mobile) -->
+        <div class="flex overflow-x-auto no-scrollbar sm:flex-wrap items-center justify-start sm:justify-center gap-1.5 sm:gap-2 mt-3.5 text-xs text-slate-500 font-medium px-1 py-1">
+          <span class="text-slate-400 font-semibold mr-1 shrink-0">Trending:</span>
+          <button type="button" class="tag-chip shrink-0 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('QA Automation')">🧪 QA Automation</button>
+          <button type="button" class="tag-chip shrink-0 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('SDET')">⚡ SDET</button>
+          <button type="button" class="tag-chip shrink-0 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('React')">⚛️ React</button>
+          <button type="button" class="tag-chip shrink-0 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('Python')">🐍 Python</button>
+          <button type="button" class="tag-chip shrink-0 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('DevOps')">☁️ DevOps</button>
+          <button type="button" class="tag-chip shrink-0 whitespace-nowrap px-2.5 py-1 rounded-lg bg-white/90 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 shadow-2xs transition cursor-pointer" onclick="setQuickSearch('Remote')">🌐 Remote</button>
         </div>
       </div>
 
-      <!-- Quick Filter Pills -->
-      <nav class="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Role quick filters">
-        <button class="filter-pill active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer" data-filter="all">
+      <!-- Quick Filter Pills (Swipeable on Mobile) -->
+      <nav class="mt-6 flex items-center overflow-x-auto no-scrollbar pb-2 sm:pb-0 sm:flex-wrap justify-start sm:justify-center gap-2 px-1" aria-label="Role quick filters">
+        <button class="filter-pill active shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer" data-filter="all">
           All Roles
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="qa">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="qa">
           🧪 QA & Testing
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="engineer">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="engineer">
           💻 Software Engineers
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="devops">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="devops">
           ☁️ DevOps & Cloud
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="data">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="data">
           📊 Data & AI
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="mobile">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="mobile">
           📱 Mobile Apps
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="design">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="design">
           🎨 UI/UX & Design
         </button>
-        <button class="filter-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="support">
+        <button class="filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer" data-filter="support">
           🎧 Support & Ops
         </button>
       </nav>
@@ -328,7 +345,7 @@
           </p>
         </div>
       </div>
-      <button id="banner-job-alerts-btn" type="button" class="shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-slate-900 to-indigo-950 text-white hover:from-slate-800 hover:to-indigo-900 shadow-sm hover:shadow transition transform active:scale-95 cursor-pointer">
+      <button id="banner-job-alerts-btn" type="button" class="w-full sm:w-auto shrink-0 px-4 py-2.5 sm:py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-slate-900 to-indigo-950 text-white hover:from-slate-800 hover:to-indigo-900 shadow-sm hover:shadow transition transform active:scale-95 cursor-pointer">
         ⚡ Setup Instant Alerts
       </button>
     </div>
@@ -337,9 +354,9 @@
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs mb-8" role="search" aria-label="Job filters">
       
       <!-- Top line: Heading, Scope Switch, Result Counter, and Reset -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
-        <div class="flex flex-wrap items-center gap-3">
-          <div role="status" aria-live="polite" class="flex items-center space-x-2">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div role="status" aria-live="polite" class="flex items-center justify-between sm:justify-start space-x-2">
             <h2 id="results-heading" class="text-base sm:text-lg font-bold text-slate-900">
               Available Positions
             </h2>
@@ -348,40 +365,57 @@
             </span>
           </div>
 
-          <!-- Scope Switcher: India & Remote vs Worldwide -->
-          <div class="inline-flex items-center bg-slate-100 p-0.5 rounded-xl text-xs font-medium border border-slate-200">
-            <button id="scope-india-btn" type="button" class="px-2.5 py-1 rounded-lg bg-white text-brand-700 font-bold shadow-2xs transition">
-              🇮🇳 India & Remote
-            </button>
-            <button id="scope-global-btn" type="button" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">
-              🌐 All Worldwide
-            </button>
-          </div>
+          <!-- Controls strip (Swipeable on mobile) -->
+          <div class="flex items-center overflow-x-auto no-scrollbar gap-2 pb-1 sm:pb-0 w-full sm:w-auto">
+            <!-- Scope Switcher: India & Remote vs Worldwide -->
+            <div class="inline-flex items-center bg-slate-100 p-0.5 rounded-xl text-xs font-medium border border-slate-200 shrink-0">
+              <button id="scope-india-btn" type="button" class="px-2.5 py-1 rounded-lg bg-white text-brand-700 font-bold shadow-2xs transition whitespace-nowrap cursor-pointer">
+                🇮🇳 India & Remote
+              </button>
+              <button id="scope-global-btn" type="button" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition whitespace-nowrap cursor-pointer">
+                🌐 All Worldwide
+              </button>
+            </div>
 
-          <!-- Personal Tracker Tabs: All, Saved, Applied -->
-          <div class="inline-flex items-center bg-slate-100 p-0.5 rounded-xl text-xs font-medium border border-slate-200">
-            <button id="tracker-all-btn" type="button" class="px-2.5 py-1 rounded-lg bg-white text-slate-900 font-bold shadow-2xs transition">
-              All Jobs
-            </button>
-            <button id="tracker-saved-btn" type="button" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer">
-              <span>⭐ Saved</span>
-              <span id="saved-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">0</span>
-            </button>
-            <button id="tracker-applied-btn" type="button" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer">
-              <span>✓ Applied</span>
-              <span id="applied-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">0</span>
-            </button>
+            <!-- Personal Tracker Tabs: All, Saved, Applied -->
+            <div class="inline-flex items-center bg-slate-100 p-0.5 rounded-xl text-xs font-medium border border-slate-200 shrink-0">
+              <button id="tracker-all-btn" type="button" class="px-2.5 py-1 rounded-lg bg-white text-slate-900 font-bold shadow-2xs transition whitespace-nowrap cursor-pointer">
+                All Jobs
+              </button>
+              <button id="tracker-saved-btn" type="button" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <span>⭐ Saved</span>
+                <span id="saved-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">0</span>
+              </button>
+              <button id="tracker-applied-btn" type="button" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <span>✓ Applied</span>
+                <span id="applied-count-badge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">0</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <button id="reset-filters-btn" type="button" class="inline-flex items-center text-xs font-medium text-slate-500 hover:text-brand-600 transition focus:ring-2 focus:ring-brand-500 rounded p-1">
+        <button id="reset-filters-btn" type="button" class="hidden sm:inline-flex items-center text-xs font-medium text-slate-500 hover:text-brand-600 transition focus:ring-2 focus:ring-brand-500 rounded p-1 cursor-pointer">
           <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           Reset All Filters
         </button>
       </div>
 
+      <!-- Mobile Filter Toggle Strip (Saves 500px vertical scroll on phones) -->
+      <div class="sm:hidden pt-3 flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <button id="mobile-filter-toggle-btn" type="button" class="flex-1 py-2.5 px-3.5 bg-brand-50 hover:bg-brand-100 text-brand-900 border border-brand-200 text-xs font-bold rounded-xl flex items-center justify-between transition cursor-pointer">
+          <span class="flex items-center gap-1.5">
+            <span>⚡ Role, City & Exp Filters</span>
+            <span id="mobile-filter-active-count" class="hidden px-1.5 py-0.2 rounded-full bg-brand-600 text-white text-[10px] font-bold">1</span>
+          </span>
+          <span id="mobile-filter-chevron" class="text-xs transition-transform font-bold text-brand-700">▼ Show</span>
+        </button>
+        <button id="reset-filters-btn-mobile" type="button" class="py-2.5 px-3 text-slate-600 hover:text-brand-600 bg-slate-100 rounded-xl text-xs font-semibold transition cursor-pointer" title="Reset All Filters">
+          Reset
+        </button>
+      </div>
+
       <!-- Primary 5-Filter High-Value Grid (Features Essential Job Role Selector) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 pt-4">
+      <div id="filters-grid-wrapper" class="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 pt-4">
         
         <!-- 0. Essential Job Role Dropdown -->
         <div>
@@ -572,15 +606,15 @@
 
         <!-- Date Posted & Freshness Filter -->
         <div>
-          <label for="date-select" class="block text-xs font-bold text-slate-600 mb-1.5">⚡ Freshness (Auto-Pruned)</label>
+          <label for="date-select" class="block text-xs font-bold text-slate-600 mb-1.5">⚡ Date Posted</label>
           <select id="date-select" class="w-full text-xs bg-white border border-slate-200 text-slate-800 py-2 px-3 rounded-xl shadow-xs focus:ring-2 focus:ring-brand-500 outline-none">
-            <option value="21" selected>✨ Fresh (< 21 Days)</option>
+            <option value="any" selected>🌐 All Active Openings</option>
             <option value="1">⚡ Last 24 Hours</option>
             <option value="3">🔥 Last 3 Days</option>
             <option value="7">📅 Last 7 Days</option>
             <option value="14">🗓️ Last 14 Days</option>
+            <option value="21">✨ Fresh (< 21 Days)</option>
             <option value="30">📆 Last 30 Days</option>
-            <option value="any">🌐 All Time (Include Older)</option>
           </select>
         </div>
 
@@ -784,17 +818,17 @@
   </main>
 
   <!-- Job Detail Modal / Drawer (Accessible Dialog) -->
-  <div id="job-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden" role="document">
+  <div id="job-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-3xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden" role="document">
       
       <!-- Modal Header -->
-      <div class="p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
-        <div>
+      <div class="p-4 sm:p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+        <div class="pr-3">
           <span id="modal-badge-ats" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-2">
             🎯 Direct ATS Portal
           </span>
-          <h2 id="modal-title" class="text-xl sm:text-2xl font-bold text-slate-900">Job Title</h2>
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-600">
+          <h2 id="modal-title" class="text-lg sm:text-2xl font-bold text-slate-900 leading-snug">Job Title</h2>
+          <div class="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 mt-1 text-xs sm:text-sm text-slate-600">
             <span id="modal-company" class="font-medium text-slate-800">Company Name</span>
             <span>•</span>
             <span id="modal-location">Location</span>
@@ -802,7 +836,7 @@
             <span id="modal-posted">Posted Date</span>
           </div>
         </div>
-        <button id="modal-close-btn" type="button" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition focus:ring-2 focus:ring-brand-500" aria-label="Close job details modal">
+        <button id="modal-close-btn" type="button" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition focus:ring-2 focus:ring-brand-500 shrink-0 cursor-pointer" aria-label="Close job details modal">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -810,56 +844,66 @@
       </div>
 
       <!-- Modal Body (Job Description) -->
-      <div id="modal-content" class="p-6 overflow-y-auto flex-grow text-slate-700 text-sm sm:text-base leading-relaxed space-y-4">
+      <div id="modal-content" class="p-4 sm:p-6 overflow-y-auto flex-grow text-slate-700 text-sm sm:text-base leading-relaxed space-y-4">
         <!-- Rendered Description -->
       </div>
 
       <!-- Affiliate Prep Widget (Resume & Mock Interview) -->
-      <div class="mx-6 mb-2 p-3.5 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/90 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div>
-          <span class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+      <div class="mx-3.5 sm:mx-6 mb-2 p-3 sm:p-3.5 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/90 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
+        <div class="text-center sm:text-left">
+          <span class="text-xs font-bold text-indigo-950 flex items-center justify-center sm:justify-start gap-1.5">
             🚀 Boost Your Shortlisting Rate at <span id="modal-prep-company" class="font-extrabold text-brand-700">this company</span>
           </span>
           <p class="text-[11px] text-slate-600 mt-0.5">
             Format your resume for this ATS or practice 1-on-1 with an interview mentor before applying.
           </p>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <a id="modal-resume-affiliate" href="https://resume.io/" target="_blank" rel="sponsored nofollow" class="px-2.5 py-1.5 bg-white text-indigo-700 text-xs font-semibold rounded-lg border border-indigo-200 hover:bg-indigo-50 transition shadow-2xs flex items-center gap-1">
-            📄 ATS Resume Optimizer
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end shrink-0">
+          <a id="modal-resume-affiliate" href="https://resume.io/" target="_blank" rel="sponsored nofollow" class="flex-1 sm:flex-initial px-2.5 py-1.5 bg-white text-indigo-700 text-[11px] sm:text-xs font-semibold rounded-lg border border-indigo-200 hover:bg-indigo-50 transition shadow-2xs flex items-center justify-center gap-1">
+            📄 ATS Resume Scan
           </a>
-          <a id="modal-topmate-affiliate" href="https://topmate.io/" target="_blank" rel="sponsored nofollow" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-2xs flex items-center gap-1">
+          <a id="modal-topmate-affiliate" href="https://topmate.io/" target="_blank" rel="sponsored nofollow" class="flex-1 sm:flex-initial px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-semibold rounded-lg transition shadow-2xs flex items-center justify-center gap-1">
             🎯 Mock Interview
           </a>
         </div>
       </div>
 
       <!-- Modal Footer (CTAs) -->
-      <div class="p-6 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-3 text-xs text-slate-500">
-          <span>Source: <span id="modal-source" class="font-medium text-slate-700">Remotive</span></span>
-          <span>•</span>
-          <button id="modal-report-btn" type="button" class="text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer" title="Report this job posting as closed or broken">
-            🚩 Report Closed
+      <div class="p-3 sm:p-5 border-t border-slate-100 bg-slate-50/90 flex flex-col gap-2.5 shrink-0">
+        <!-- Sub-bar: Source & Alert Similar -->
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <div class="flex items-center gap-2">
+            <span>Source: <span id="modal-source" class="font-medium text-slate-700">Remotive</span></span>
+            <span>•</span>
+            <button id="modal-report-btn" type="button" class="text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 cursor-pointer" title="Report this job posting as closed or broken">
+              🚩 Report Closed
+            </button>
+          </div>
+          <button id="modal-alert-role-btn" type="button" class="text-amber-800 hover:text-amber-900 hover:underline text-xs font-bold flex items-center gap-1 cursor-pointer" title="Get notified when new jobs matching this role are posted">
+            🔔 <span>Alert Similar</span>
           </button>
         </div>
-        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-          <button id="modal-alert-role-btn" type="button" class="px-3 py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-semibold text-amber-900 hover:bg-amber-100 transition shadow-2xs flex items-center gap-1.5 cursor-pointer" title="Get notified when new jobs matching this role are posted">
-            <span>🔔</span> <span>Alert Similar Roles</span>
+
+        <!-- Primary Action Bar (Compact Toolbar on Mobile, Full on Desktop) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 w-full">
+          <!-- WhatsApp Share -->
+          <button id="modal-whatsapp-btn" type="button" class="p-2 sm:px-3 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer shrink-0" title="Share this job on WhatsApp">
+            <span>💬</span> <span class="hidden md:inline">Share</span>
           </button>
-          <button id="modal-whatsapp-btn" type="button" class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-semibold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs flex items-center gap-1.5 cursor-pointer" title="Share this job directly to WhatsApp friends or groups">
-            <span>💬</span> <span>Share on WhatsApp</span>
+          <!-- Save / Bookmark -->
+          <button id="modal-save-btn" type="button" class="p-2 sm:px-3.5 sm:py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center justify-center gap-1 cursor-pointer shrink-0" title="Bookmark job">
+            <span id="modal-save-icon">⭐</span> <span id="modal-save-text" class="hidden md:inline">Save</span>
           </button>
-          <button id="modal-save-btn" type="button" class="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer">
-            <span id="modal-save-icon">⭐</span> <span id="modal-save-text">Save</span>
+          <!-- Mark Applied -->
+          <button id="modal-applied-btn" type="button" class="p-2 sm:px-3.5 sm:py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center justify-center gap-1 cursor-pointer shrink-0" title="Mark as applied">
+            <span id="modal-applied-icon">✓</span> <span id="modal-applied-text" class="hidden md:inline">Applied</span>
           </button>
-          <button id="modal-applied-btn" type="button" class="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 flex items-center gap-1 cursor-pointer">
-            <span id="modal-applied-icon">✓</span> <span id="modal-applied-text">Mark Applied</span>
+          <!-- Copy Link -->
+          <button id="modal-copy-btn" type="button" class="p-2 sm:px-3 sm:py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 cursor-pointer shrink-0" title="Copy Job Link">
+            📋 <span class="hidden md:inline">Copy</span>
           </button>
-          <button id="modal-copy-btn" type="button" class="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs focus:ring-2 focus:ring-brand-500 cursor-pointer">
-            📋 Copy Link
-          </button>
-          <a id="modal-apply-btn" href="#" target="_blank" rel="noopener noreferrer" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-bold text-center transition shadow-md hover:shadow-lg focus:ring-2 focus:ring-brand-500">
+          <!-- Apply Button (Full width expansion on mobile) -->
+          <a id="modal-apply-btn" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 px-4 py-2.5 sm:py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-bold text-center transition shadow-md hover:shadow-lg focus:ring-2 focus:ring-brand-500 whitespace-nowrap">
             Apply on Official Site ↗
           </a>
         </div>
@@ -869,16 +913,16 @@
   </div>
 
   <!-- Employer "Post a Featured Job" Modal -->
-  <div id="employer-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="employer-modal-title">
-    <div class="bg-white rounded-3xl max-w-lg w-full flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative">
+  <div id="employer-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="employer-modal-title">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[92vh] sm:max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative">
       <!-- Close Button -->
-      <button id="employer-modal-close-btn" type="button" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition cursor-pointer" aria-label="Close modal">
+      <button id="employer-modal-close-btn" type="button" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition cursor-pointer z-10" aria-label="Close modal">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
 
       <!-- Modal Header -->
-      <div class="p-6 sm:p-8 bg-gradient-to-b from-slate-900 to-slate-800 text-white text-center">
-        <div class="w-12 h-12 mx-auto rounded-2xl bg-brand-600 text-white flex items-center justify-center text-xl shadow-md mb-3">
+      <div class="p-5 sm:p-8 bg-gradient-to-b from-slate-900 to-slate-800 text-white text-center shrink-0">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-brand-600 text-white flex items-center justify-center text-xl shadow-md mb-2 sm:mb-3">
           🏢
         </div>
         <h2 id="employer-modal-title" class="text-xl sm:text-2xl font-black tracking-tight text-white">
@@ -890,7 +934,7 @@
       </div>
 
       <!-- Form Body -->
-      <form id="employer-job-form" class="p-6 space-y-4" onsubmit="event.preventDefault(); submitEmployerJob();">
+      <form id="employer-job-form" class="p-4 sm:p-6 space-y-3.5 overflow-y-auto" onsubmit="event.preventDefault(); submitEmployerJob();">
         <div>
           <label for="emp-company-name" class="block text-xs font-bold text-slate-700 mb-1">Company Name *</label>
           <input type="text" id="emp-company-name" required placeholder="e.g. Acme Technologies" class="w-full text-xs sm:text-sm border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-brand-500 outline-none">
@@ -935,15 +979,15 @@
   </div>
 
   <!-- Candidate VIP Job Alerts Modal -->
-  <div id="job-alerts-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="job-alerts-modal-title">
-    <div class="bg-white rounded-3xl max-w-lg w-full flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative max-h-[90vh]">
+  <div id="job-alerts-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="job-alerts-modal-title">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative max-h-[95vh] sm:max-h-[90vh]">
       <!-- Close Button -->
       <button id="job-alerts-close-btn" type="button" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition cursor-pointer z-10" aria-label="Close modal">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
 
       <!-- Modal Header -->
-      <div class="p-6 bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 text-white text-center shrink-0">
+      <div class="p-5 sm:p-6 bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 text-white text-center shrink-0">
         <div class="w-12 h-12 mx-auto rounded-2xl bg-white/20 backdrop-blur-xs text-white flex items-center justify-center text-2xl shadow-md mb-2">
           🔔
         </div>
@@ -956,7 +1000,7 @@
       </div>
 
       <!-- Form Body (Scrollable) -->
-      <form id="job-alerts-form" class="p-6 space-y-4 overflow-y-auto" onsubmit="event.preventDefault(); submitJobAlerts();">
+      <form id="job-alerts-form" class="p-4 sm:p-6 space-y-3.5 overflow-y-auto" onsubmit="event.preventDefault(); submitJobAlerts();">
         
         <!-- Target Role Selection -->
         <div>
