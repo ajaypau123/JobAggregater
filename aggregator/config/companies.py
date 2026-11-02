@@ -67,6 +67,12 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Adyen", ats_type="greenhouse", slug="adyen"),
     ATSCompany(name="Duolingo", ats_type="greenhouse", slug="duolingo"),
     ATSCompany(name="Gemini", ats_type="greenhouse", slug="gemini"),
+    ATSCompany(name="Razorpay", ats_type="greenhouse", slug="razorpaysoftwareprivatelimited"),
+    ATSCompany(name="Quince", ats_type="greenhouse", slug="quince"),
+    ATSCompany(name="Tenstorrent", ats_type="greenhouse", slug="tenstorrent"),
+    ATSCompany(name="Glance", ats_type="greenhouse", slug="glance"),
+    ATSCompany(name="Motive", ats_type="greenhouse", slug="motive"),
+    ATSCompany(name="Ethos Life", ats_type="greenhouse", slug="ethos"),
 
     # ── Lever ──────────────────────────────────────────────────────────────────
     ATSCompany(name="Paytm", ats_type="lever", slug="paytm"),
@@ -82,6 +88,10 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Everbridge", ats_type="lever", slug="everbridge"),
     ATSCompany(name="Endpoint Clinical", ats_type="lever", slug="endpointclinical"),
     ATSCompany(name="Spotify", ats_type="lever", slug="spotify"),
+    ATSCompany(name="Saviynt", ats_type="lever", slug="saviynt"),
+    ATSCompany(name="Gushwork", ats_type="lever", slug="gushwork"),
+    ATSCompany(name="Neuron7", ats_type="lever", slug="neuron7"),
+    ATSCompany(name="Zimperium", ats_type="lever", slug="zimperium"),
 
     # ── Ashby ──────────────────────────────────────────────────────────────────
     ATSCompany(name="Sarvam AI", ats_type="ashby", slug="sarvam"),
@@ -108,6 +118,9 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Cursor", ats_type="ashby", slug="cursor"),
     ATSCompany(name="Ramp", ats_type="ashby", slug="ramp"),
     ATSCompany(name="Perplexity", ats_type="ashby", slug="perplexity"),
+    ATSCompany(name="CertifyOS", ats_type="ashby", slug="certifyos"),
+    ATSCompany(name="Smallest AI", ats_type="ashby", slug="smallest"),
+    ATSCompany(name="Genera", ats_type="ashby", slug="genera"),
 
     # ── SmartRecruiters ────────────────────────────────────────────────────────
     ATSCompany(name="Bosch Group", ats_type="smartrecruiters", slug="BoschGroup", extra_params={"country": "in"}),
@@ -136,4 +149,10 @@ DEFAULT_WORKDAY_COMPANIES: list[WorkdayCompany] = [
     WorkdayCompany(name="Adobe", subdomain="adobe.wd5", tenant="adobe", site="external_experienced"),
     WorkdayCompany(name="HP", subdomain="hp.wd5", tenant="hp", site="ExternalCareerSite"),
     WorkdayCompany(name="Autodesk", subdomain="autodesk.wd1", tenant="autodesk", site="Ext"),
+    WorkdayCompany(name="Walmart Global Tech", subdomain="walmart.wd504", tenant="walmart", site="WalmartExternal", country_filter="Bangalore"),
+    WorkdayCompany(name="Cisco", subdomain="cisco.wd5", tenant="cisco", site="Cisco_Careers", country_filter="India"),
+    WorkdayCompany(name="Salesforce", subdomain="salesforce.wd12", tenant="salesforce", site="External_Career_Site", country_filter="India"),
+    WorkdayCompany(name="Postman", subdomain="postman.wd108", tenant="postman", site="careers", country_filter="India"),
+    WorkdayCompany(name="BrowserStack", subdomain="browserstack.wd3", tenant="browserstack", site="External", country_filter="India"),
+    WorkdayCompany(name="Broadcom", subdomain="broadcom.wd1", tenant="broadcom", site="External_Career", country_filter="India"),
 ]
