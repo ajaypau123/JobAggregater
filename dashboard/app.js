@@ -1814,7 +1814,7 @@ if (resetFiltersBtnMobile) {
 // Mobile Employer Post Job Icon Button
 const employerPostBtnMobile = document.getElementById('employer-post-btn-mobile');
 if (employerPostBtnMobile) {
-  employerPostBtnMobile.addEventListener('click', openEmployerModal);
+  employerPostBtnMobile.addEventListener('click', () => openEmployerModal());
 }
 
 // Refresh Button
@@ -1885,21 +1885,23 @@ window.shareOnWhatsApp = function(title, company, url, event) {
 // EMPLOYER FEATURED JOB SUBMISSION
 // ============================================================
 
-window.openEmployerModal = function() {
+function openEmployerModal() {
   if (!elements.employerModal) return;
   elements.employerModal.classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
   const compInput = document.getElementById('emp-company-name');
   if (compInput) compInput.focus();
-};
+}
+window.openEmployerModal = openEmployerModal;
 
-window.closeEmployerModal = function() {
+function closeEmployerModal() {
   if (!elements.employerModal) return;
   elements.employerModal.classList.add('hidden');
   document.body.classList.remove('overflow-hidden');
-};
+}
+window.closeEmployerModal = closeEmployerModal;
 
-window.submitEmployerJob = function() {
+function submitEmployerJob() {
   const companyEl = document.getElementById('emp-company-name');
   const titleEl = document.getElementById('emp-job-title');
   const locEl = document.getElementById('emp-location');
@@ -1946,14 +1948,15 @@ window.submitEmployerJob = function() {
   } else {
     showToast('🎉 Job submitted! Pinned as #1 Featured Job on JobsForIndia.');
   }
-};
+}
+window.submitEmployerJob = submitEmployerJob;
 
 // Employer Modal Listeners
 if (elements.employerPostBtn) {
-  elements.employerPostBtn.addEventListener('click', openEmployerModal);
+  elements.employerPostBtn.addEventListener('click', () => openEmployerModal());
 }
 if (elements.employerModalCloseBtn) {
-  elements.employerModalCloseBtn.addEventListener('click', closeEmployerModal);
+  elements.employerModalCloseBtn.addEventListener('click', () => closeEmployerModal());
 }
 if (elements.employerModal) {
   elements.employerModal.addEventListener('click', e => {
@@ -1983,7 +1986,7 @@ const alertSubmitBtn = document.getElementById('alert-submit-btn');
 const alertPhoneWrapper = document.getElementById('alert-phone-wrapper');
 const alertFreeDigestBtn = document.getElementById('alert-free-digest-btn');
 
-window.openJobAlertsModal = function(prefillCategory = null, prefillKeyword = null) {
+function openJobAlertsModal(prefillCategory = null, prefillKeyword = null) {
   if (!jobAlertsModal) return;
   if (prefillCategory && alertRoleSelect) {
     alertRoleSelect.value = prefillCategory;
@@ -1994,11 +1997,13 @@ window.openJobAlertsModal = function(prefillCategory = null, prefillKeyword = nu
   jobAlertsModal.classList.remove('hidden');
   const emailInput = document.getElementById('alert-email');
   if (emailInput) setTimeout(() => emailInput.focus(), 100);
-};
+}
+window.openJobAlertsModal = openJobAlertsModal;
 
-window.closeJobAlertsModal = function() {
+function closeJobAlertsModal() {
   if (jobAlertsModal) jobAlertsModal.classList.add('hidden');
-};
+}
+window.closeJobAlertsModal = closeJobAlertsModal;
 
 // Toggle Phone input when Telegram or WhatsApp channel is selected
 document.querySelectorAll('input[name="alert_channel"]').forEach(radio => {
@@ -2040,7 +2045,7 @@ if (alertFreeDigestBtn) {
   });
 }
 
-window.submitJobAlerts = function() {
+function submitJobAlerts() {
   const email = (document.getElementById('alert-email')?.value || '').trim();
   const roleCategory = document.getElementById('alert-role-category')?.value || 'all';
   const keywords = (document.getElementById('alert-keywords')?.value || '').trim();
@@ -2100,7 +2105,8 @@ window.submitJobAlerts = function() {
   } else {
     showToast('🎉 Subscribed to Free Weekly Digest! Check your inbox.');
   }
-};
+}
+window.submitJobAlerts = submitJobAlerts;
 
 // Bind Alert Buttons
 if (headerAlertsBtn) headerAlertsBtn.addEventListener('click', () => openJobAlertsModal());
