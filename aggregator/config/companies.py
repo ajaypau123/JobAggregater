@@ -126,6 +126,9 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="CertifyOS", ats_type="ashby", slug="certifyos"),
     ATSCompany(name="Smallest AI", ats_type="ashby", slug="smallest"),
     ATSCompany(name="Genera", ats_type="ashby", slug="genera"),
+    ATSCompany(name="SigNoz", ats_type="ashby", slug="signoz"),
+    ATSCompany(name="Baseten", ats_type="ashby", slug="baseten"),
+    ATSCompany(name="Deepgram", ats_type="ashby", slug="deepgram"),
 
     # ── SmartRecruiters ────────────────────────────────────────────────────────
     ATSCompany(name="Bosch Group", ats_type="smartrecruiters", slug="BoschGroup", extra_params={"country": "in"}),

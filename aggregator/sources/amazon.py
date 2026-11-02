@@ -17,7 +17,7 @@ TECH_CATEGORIES = [
     "systems-quality-engineering",
     "data-science",
 ]
-MAX_PAGES_PER_CATEGORY = 3
+MAX_PAGES_PER_CATEGORY = 6
 PAGE_SIZE = 100
 
 
