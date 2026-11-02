@@ -73,6 +73,13 @@ DEFAULT_ATS_COMPANIES: list[ATSCompany] = [
     ATSCompany(name="Glance", ats_type="greenhouse", slug="glance"),
     ATSCompany(name="Motive", ats_type="greenhouse", slug="motive"),
     ATSCompany(name="Ethos Life", ats_type="greenhouse", slug="ethos"),
+    ATSCompany(name="Databricks", ats_type="greenhouse", slug="databricks"),
+    ATSCompany(name="Okta", ats_type="greenhouse", slug="okta"),
+    ATSCompany(name="GitLab", ats_type="greenhouse", slug="gitlab"),
+    ATSCompany(name="Druva", ats_type="greenhouse", slug="druva"),
+    ATSCompany(name="MongoDB", ats_type="greenhouse", slug="mongodb"),
+    ATSCompany(name="Elastic", ats_type="greenhouse", slug="elastic"),
+    ATSCompany(name="Twilio", ats_type="greenhouse", slug="twilio"),
 
     # ── Lever ──────────────────────────────────────────────────────────────────
     ATSCompany(name="Paytm", ats_type="lever", slug="paytm"),
@@ -156,4 +163,7 @@ DEFAULT_WORKDAY_COMPANIES: list[WorkdayCompany] = [
     WorkdayCompany(name="Postman", subdomain="postman.wd108", tenant="postman", site="careers", country_filter="India"),
     WorkdayCompany(name="BrowserStack", subdomain="browserstack.wd3", tenant="browserstack", site="External", country_filter="India"),
     WorkdayCompany(name="Broadcom", subdomain="broadcom.wd1", tenant="broadcom", site="External_Career", country_filter="India"),
+    WorkdayCompany(name="Micron Technology", subdomain="micron.wd1", tenant="micron", site="External", country_filter="India"),
+    WorkdayCompany(name="Cadence Design", subdomain="cadence.wd1", tenant="cadence", site="External_Careers", country_filter="India"),
+    WorkdayCompany(name="Analog Devices", subdomain="analogdevices.wd1", tenant="analogdevices", site="External", country_filter="India"),
 ]

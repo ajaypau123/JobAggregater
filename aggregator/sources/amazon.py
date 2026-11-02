@@ -17,7 +17,8 @@ TECH_CATEGORIES = [
     "systems-quality-engineering",
     "data-science",
 ]
-MAX_RESULTS_PER_CATEGORY = 100
+MAX_PAGES_PER_CATEGORY = 3
+PAGE_SIZE = 100
 
 
 class AmazonSource(BaseJobSource):
@@ -30,40 +31,49 @@ class AmazonSource(BaseJobSource):
         })
 
     def collect_jobs(self) -> list[dict]:
-        """Collect active tech jobs from Amazon India."""
+        """Collect active tech jobs from Amazon India across multiple pages."""
         all_jobs: list[dict] = []
         seen_ids: set[str] = set()
 
-        logger.info("[Amazon] Querying Amazon India tech career endpoints...")
+        logger.info("[Amazon] Querying Amazon India tech career endpoints with pagination...")
 
         for category in TECH_CATEGORIES:
-            try:
-                params = {
-                    "country": "IND",
-                    "category": category,
-                    "result_limit": MAX_RESULTS_PER_CATEGORY,
-                    "sort": "recent",
-                }
-                data = self._get(AMAZON_SEARCH_URL, params=params)
-                if not isinstance(data, dict):
-                    continue
+            for page in range(MAX_PAGES_PER_CATEGORY):
+                offset = page * PAGE_SIZE
+                try:
+                    params = {
+                        "country": "IND",
+                        "category": category,
+                        "result_limit": PAGE_SIZE,
+                        "offset": offset,
+                        "sort": "recent",
+                    }
+                    data = self._get(AMAZON_SEARCH_URL, params=params)
+                    if not isinstance(data, dict):
+                        break
 
-                jobs = data.get("jobs", [])
-                added_count = 0
-                for j in jobs:
-                    job_id = str(j.get("id_icims") or j.get("id") or "")
-                    if job_id and job_id not in seen_ids:
-                        seen_ids.add(job_id)
-                        j["_source_type"] = "amazon"
-                        j["_company_name"] = "Amazon"
-                        all_jobs.append(j)
-                        added_count += 1
+                    jobs = data.get("jobs", [])
+                    if not jobs:
+                        break
 
-                logger.debug("[Amazon] Category '%s': %d jobs added", category, added_count)
-            except Exception as e:
-                logger.warning("[Amazon] Could not fetch category '%s': %s", category, e)
-                continue
+                    added_count = 0
+                    for j in jobs:
+                        job_id = str(j.get("id_icims") or j.get("id") or "")
+                        if job_id and job_id not in seen_ids:
+                            seen_ids.add(job_id)
+                            j["_source_type"] = "amazon"
+                            j["_company_name"] = "Amazon"
+                            all_jobs.append(j)
+                            added_count += 1
 
-        logger.info("[Amazon] Total verified Amazon India jobs collected: %d", len(all_jobs))
+                    logger.debug("[Amazon] Category '%s' page %d: %d jobs added", category, page + 1, added_count)
+
+                    # If fewer jobs returned than page size, no more pages
+                    if len(jobs) < PAGE_SIZE:
+                        break
+                except Exception as e:
+                    logger.warning("[Amazon] Could not fetch category '%s' offset %d: %s", category, offset, e)
+                    break
+
+        logger.info("[Amazon] Total verified Amazon India tech jobs collected: %d", len(all_jobs))
         return all_jobs
-
