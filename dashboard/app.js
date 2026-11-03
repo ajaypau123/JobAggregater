@@ -2175,7 +2175,7 @@ const alertSubmitBtn = document.getElementById('alert-submit-btn');
 const alertPhoneWrapper = document.getElementById('alert-phone-wrapper');
 const alertFreeDigestBtn = document.getElementById('alert-free-digest-btn');
 
-window.openJobAlertsModal = function(prefillCategory = null, prefillKeyword = null) {
+function openJobAlertsModal(prefillCategory = null, prefillKeyword = null) {
   if (!jobAlertsModal) return;
   if (prefillCategory && alertRoleSelect) {
     alertRoleSelect.value = prefillCategory;
@@ -2186,11 +2186,13 @@ window.openJobAlertsModal = function(prefillCategory = null, prefillKeyword = nu
   jobAlertsModal.classList.remove('hidden');
   const emailInput = document.getElementById('alert-email');
   if (emailInput) setTimeout(() => emailInput.focus(), 100);
-};
+}
+window.openJobAlertsModal = openJobAlertsModal;
 
-window.closeJobAlertsModal = function() {
+function closeJobAlertsModal() {
   if (jobAlertsModal) jobAlertsModal.classList.add('hidden');
-};
+}
+window.closeJobAlertsModal = closeJobAlertsModal;
 
 // Toggle Phone input when Telegram or WhatsApp channel is selected
 document.querySelectorAll('input[name="alert_channel"]').forEach(radio => {
