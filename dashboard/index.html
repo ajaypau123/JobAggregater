@@ -36,7 +36,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Precompiled Production Tailwind CSS -->
-  <link rel="stylesheet" href="style.css?v=2.2">
+  <link rel="stylesheet" href="style.css?v=2.3">
 
   <style>
     * {
@@ -821,8 +821,55 @@
       </div>
 
       <!-- Modal Body (Job Description) -->
-      <div id="modal-content" class="p-4 sm:p-6 overflow-y-auto flex-grow text-slate-700 text-sm sm:text-base leading-relaxed space-y-4">
+      <div id="modal-content-container" class="p-4 sm:p-6 overflow-y-auto flex-grow text-slate-700 text-sm sm:text-base leading-relaxed space-y-4">
+        
+        <!-- Essential Role Highlights Card -->
+        <div id="modal-snapshot-card" class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/30 border border-slate-200/90 shadow-2xs">
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/60">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+              <span>⚡</span> Essential Role Snapshot
+            </span>
+            <span id="modal-snapshot-domain" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+              Technology
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <!-- Experience -->
+            <div class="p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Experience</span>
+              <span id="modal-snapshot-exp" class="font-bold text-slate-800 truncate block mt-0.5">3+ Years</span>
+            </div>
+            <!-- Workplace -->
+            <div class="p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Workplace</span>
+              <span id="modal-snapshot-workplace" class="font-bold text-slate-800 truncate block mt-0.5">Hybrid</span>
+            </div>
+            <!-- Job Type -->
+            <div class="p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Job Type</span>
+              <span id="modal-snapshot-type" class="font-bold text-slate-800 truncate block mt-0.5">Full-time</span>
+            </div>
+            <!-- Verification -->
+            <div class="p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200/70 shadow-2xs">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Apply Path</span>
+              <span id="modal-snapshot-apply" class="font-bold text-emerald-700 truncate block mt-0.5">Direct ATS ✓</span>
+            </div>
+          </div>
+
+          <!-- Tech Stack Container -->
+          <div id="modal-snapshot-tech-container" class="mt-3 pt-2.5 border-t border-slate-200/60">
+            <span class="text-[11px] font-bold text-slate-600 block mb-1.5">🛠️ Tech Stack & Core Skills:</span>
+            <div id="modal-snapshot-tech-stack" class="flex flex-wrap gap-1.5">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
         <!-- Rendered Description -->
+        <div id="modal-content" class="space-y-4 pt-1">
+          <!-- Rendered Description -->
+        </div>
       </div>
 
       <!-- Affiliate Prep Widget (Resume & Mock Interview) -->
@@ -1199,11 +1246,11 @@
   </footer>
 
   <!-- Preloaded Data for local file:// opening -->
-  <script src="jobs_latest.js?v=2.2"></script>
+  <script src="jobs_latest.js?v=2.3"></script>
   <!-- Monetization & Affiliates Config -->
-  <script src="affiliates-config.js?v=2.2"></script>
+  <script src="affiliates-config.js?v=2.3"></script>
   <!-- Application Logic -->
-  <script src="app.js?v=2.2"></script>
+  <script src="app.js?v=2.3"></script>
 </body>
 </html>
 

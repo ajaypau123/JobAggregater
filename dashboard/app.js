@@ -202,6 +202,13 @@ const elements = {
   modalCopyBtn: document.getElementById('modal-copy-btn'),
   modalPrepCompany: document.getElementById('modal-prep-company'),
   modalWhatsappBtn: document.getElementById('modal-whatsapp-btn'),
+  modalSnapshotCard: document.getElementById('modal-snapshot-card'),
+  modalSnapshotDomain: document.getElementById('modal-snapshot-domain'),
+  modalSnapshotExp: document.getElementById('modal-snapshot-exp'),
+  modalSnapshotWorkplace: document.getElementById('modal-snapshot-workplace'),
+  modalSnapshotType: document.getElementById('modal-snapshot-type'),
+  modalSnapshotApply: document.getElementById('modal-snapshot-apply'),
+  modalSnapshotTechStack: document.getElementById('modal-snapshot-tech-stack'),
   // Employer Feature Selectors
   employerModal: document.getElementById('employer-modal'),
   employerPostBtn: document.getElementById('employer-post-btn'),
@@ -1055,6 +1062,143 @@ window.goToPage = function(page) {
 // MODAL / DETAILS DRAWER
 // ============================================================
 
+// ============================================================
+// ESSENTIAL ROLE HIGHLIGHTS EXTRACTOR (TECH STACK & EXP)
+// ============================================================
+
+function extractJobHighlights(job) {
+  const title = job.title || '';
+  const desc = job.description || '';
+  const fullText = `${title} ${desc}`.toLowerCase();
+
+  // 1. Role Domain Track
+  let domain = 'Technology';
+  let domainColor = 'bg-brand-50 text-brand-700 border-brand-200';
+  if (/qa|quality|sdet|test|automation|cypress|selenium|playwright/.test(fullText)) {
+    domain = 'QA & Test Automation';
+    domainColor = 'bg-amber-50 text-amber-800 border-amber-200';
+  } else if (/frontend|react|next\.js|angular|vue|ui developer/.test(fullText)) {
+    domain = 'Frontend Engineering';
+    domainColor = 'bg-sky-50 text-sky-700 border-sky-200';
+  } else if (/backend|node|python|golang|java|c\+\+|c#|\.net|spring/.test(fullText)) {
+    domain = 'Backend Engineering';
+    domainColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+  } else if (/fullstack|full-stack|full stack/.test(fullText)) {
+    domain = 'Full-Stack Engineering';
+    domainColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+  } else if (/devops|sre|cloud|aws|kubernetes|k8s|infra|terraform/.test(fullText)) {
+    domain = 'Cloud & DevOps / SRE';
+    domainColor = 'bg-purple-50 text-purple-700 border-purple-200';
+  } else if (/data|analytics|bi developer|data engineer|sql/.test(fullText)) {
+    domain = 'Data & Analytics';
+    domainColor = 'bg-cyan-50 text-cyan-800 border-cyan-200';
+  } else if (/ai|ml|machine learning|deep learning|llm|genai/.test(fullText)) {
+    domain = 'AI & Machine Learning';
+    domainColor = 'bg-rose-50 text-rose-800 border-rose-200';
+  } else if (/mobile|android|ios|flutter|swift|kotlin/.test(fullText)) {
+    domain = 'Mobile App Development';
+    domainColor = 'bg-teal-50 text-teal-800 border-teal-200';
+  } else if (/product|design|ux|ui\/ux/.test(fullText)) {
+    domain = 'Product & Design';
+    domainColor = 'bg-violet-50 text-violet-800 border-violet-200';
+  }
+
+  // 2. Experience Level
+  let exp = 'Not Specified';
+  const expMatchRange = fullText.match(/(\d+)\s*(?:-|to)\s*(\d+)\s*(?:years?|yrs?)/i);
+  const expMatchMin = fullText.match(/(\d+)\+?\s*(?:years?|yrs?)(?:\s*(?:of)?\s*exp(?:erience)?)?/i);
+  
+  if (expMatchRange) {
+    exp = `${expMatchRange[1]}–${expMatchRange[2]} Years`;
+  } else if (expMatchMin && parseInt(expMatchMin[1], 10) <= 25) {
+    exp = `${expMatchMin[1]}+ Years`;
+  } else if (/\bintern\b|\binternship\b/i.test(fullText)) {
+    exp = 'Internship';
+  } else if (/\bfresher\b|\bentry[\s-]level\b|\bgraduate\b|\bcampus\b/i.test(fullText)) {
+    exp = 'Fresher / 0-1 Yr';
+  } else if (/\blead\b|\bprincipal\b|\bstaff\b|\bdirector\b|\barchitect\b/i.test(title)) {
+    exp = 'Lead / 7+ Yrs';
+  } else if (/\bsenior\b|\bsr\./i.test(title)) {
+    exp = 'Senior / 4+ Yrs';
+  } else if (/\bjunior\b|\bjr\./i.test(title)) {
+    exp = 'Junior / 1-3 Yrs';
+  } else if (job.experience) {
+    exp = job.experience;
+  }
+
+  // 3. Workplace & Position Type
+  const workplace = job.remote_type || (fullText.includes('remote') ? 'Remote' : (fullText.includes('hybrid') ? 'Hybrid' : 'On-site / Office'));
+  const positionType = job.employment_type || (fullText.includes('part-time') ? 'Part-time' : (fullText.includes('contract') ? 'Contract' : (fullText.includes('intern') ? 'Internship' : 'Full-time')));
+
+  // 4. Tech Stack Dictionary
+  const techKeywords = [
+    // Languages
+    { name: 'Python', regex: /\bpython\b/i, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { name: 'Java', regex: /\bjava\b(?!script)/i, color: 'bg-orange-50 text-orange-800 border-orange-200' },
+    { name: 'JavaScript', regex: /\bjavascript\b|\bjs\b/i, color: 'bg-yellow-50 text-yellow-800 border-yellow-200' },
+    { name: 'TypeScript', regex: /\btypescript\b|\bts\b/i, color: 'bg-blue-50 text-blue-800 border-blue-200' },
+    { name: 'Go / Golang', regex: /\bgolang\b|\bgo\s+language\b/i, color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+    { name: 'C++', regex: /\bc\+\+\b/i, color: 'bg-slate-100 text-slate-800 border-slate-300' },
+    { name: 'C# / .NET', regex: /\bc#\b|\b\.net\b/i, color: 'bg-purple-50 text-purple-800 border-purple-200' },
+    { name: 'Rust', regex: /\brust\b/i, color: 'bg-amber-50 text-amber-900 border-amber-200' },
+    { name: 'SQL', regex: /\bsql\b|\bmysql\b/i, color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+    { name: 'PostgreSQL', regex: /\bpostgres(?:ql)?\b/i, color: 'bg-sky-50 text-sky-800 border-sky-200' },
+    
+    // Web & Frameworks
+    { name: 'React', regex: /\breact(?:\.js)?\b/i, color: 'bg-sky-50 text-sky-700 border-sky-200' },
+    { name: 'Next.js', regex: /\bnext(?:\.js)?\b/i, color: 'bg-slate-100 text-slate-900 border-slate-300' },
+    { name: 'Node.js', regex: /\bnode(?:\.js)?\b/i, color: 'bg-green-50 text-green-700 border-green-200' },
+    { name: 'Angular', regex: /\bangular\b/i, color: 'bg-red-50 text-red-700 border-red-200' },
+    { name: 'Vue.js', regex: /\bvue(?:\.js)?\b/i, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    { name: 'Spring Boot', regex: /\bspring\s*boot\b|\bspring\b/i, color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+    { name: 'Django / FastAPI', regex: /\bdjango\b|\bfastapi\b/i, color: 'bg-teal-50 text-teal-800 border-teal-200' },
+
+    // QA & Automation
+    { name: 'Selenium', regex: /\bselenium\b/i, color: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' },
+    { name: 'Playwright', regex: /\bplaywright\b/i, color: 'bg-green-50 text-green-800 border-green-300 font-bold' },
+    { name: 'Cypress', regex: /\bcypress\b/i, color: 'bg-teal-50 text-teal-800 border-teal-300 font-bold' },
+    { name: 'Appium', regex: /\bappium\b/i, color: 'bg-indigo-50 text-indigo-800 border-indigo-200' },
+    { name: 'API / Postman', regex: /\bpostman\b|\brest\s*api\b|\bapi testing\b/i, color: 'bg-orange-50 text-orange-800 border-orange-200' },
+    { name: 'SDET / Automation', regex: /\bsdet\b|\btest automation\b|\btest cases\b/i, color: 'bg-amber-50 text-amber-900 border-amber-300 font-bold' },
+    { name: 'CI/CD Pipelines', regex: /\bci\/cd\b|\bjenkins\b|\bgithub actions\b/i, color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+
+    // Cloud & DevOps
+    { name: 'AWS', regex: /\baws\b|\bamazon web services\b/i, color: 'bg-amber-50 text-amber-800 border-amber-200 font-bold' },
+    { name: 'Docker', regex: /\bdocker\b/i, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { name: 'Kubernetes', regex: /\bkubernetes\b|\bk8s\b/i, color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+    { name: 'Azure', regex: /\bazure\b/i, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { name: 'GCP', regex: /\bgcp\b|\bgoogle cloud\b/i, color: 'bg-red-50 text-red-700 border-red-200' },
+    { name: 'Terraform', regex: /\bterraform\b/i, color: 'bg-purple-50 text-purple-700 border-purple-200' },
+    { name: 'Linux', regex: /\blinux\b/i, color: 'bg-slate-100 text-slate-800 border-slate-300' },
+
+    // Data, AI & Big Data
+    { name: 'MongoDB', regex: /\bmongodb\b/i, color: 'bg-green-50 text-green-700 border-green-200' },
+    { name: 'Redis', regex: /\bredis\b/i, color: 'bg-rose-50 text-rose-700 border-rose-200' },
+    { name: 'Kafka', regex: /\bkafka\b/i, color: 'bg-slate-100 text-slate-800 border-slate-300' },
+    { name: 'AI / LLM / GenAI', regex: /\bllm\b|\bgenai\b|\bgenerative ai\b|\brag\b|\blangchain\b/i, color: 'bg-purple-50 text-purple-800 border-purple-300 font-bold' },
+    { name: 'PyTorch / ML', regex: /\bpytorch\b|\btensorflow\b|\bmachine learning\b/i, color: 'bg-red-50 text-red-800 border-red-200' },
+    { name: 'Spark / Snowflake', regex: /\bspark\b|\bsnowflake\b/i, color: 'bg-cyan-50 text-cyan-800 border-cyan-200' },
+    { name: 'Mobile / Flutter', regex: /\bflutter\b|\breact native\b|\bswift\b|\bkotlin\b/i, color: 'bg-teal-50 text-teal-800 border-teal-200' },
+  ];
+
+  const matchedTech = [];
+  for (const tech of techKeywords) {
+    if (tech.regex.test(fullText)) {
+      matchedTech.push(tech);
+      if (matchedTech.length >= 8) break;
+    }
+  }
+
+  return {
+    domain,
+    domainColor,
+    exp,
+    workplace,
+    positionType,
+    matchedTech
+  };
+}
+
 window.openJobModal = function(jobId) {
   const job = state.allJobs.find(j => j.job_id === jobId);
   if (!job) return;
@@ -1083,6 +1227,29 @@ window.openJobModal = function(jobId) {
     elements.modalApplyBtn.textContent = 'Apply via Listing ↗';
   }
 
+  // Populate Essential Role Snapshot Card
+  const highlights = extractJobHighlights(job);
+  if (elements.modalSnapshotDomain) {
+    elements.modalSnapshotDomain.textContent = highlights.domain;
+    elements.modalSnapshotDomain.className = `text-[11px] font-bold px-2.5 py-0.5 rounded-full ${highlights.domainColor}`;
+  }
+  if (elements.modalSnapshotExp) elements.modalSnapshotExp.textContent = highlights.exp;
+  if (elements.modalSnapshotWorkplace) elements.modalSnapshotWorkplace.textContent = highlights.workplace;
+  if (elements.modalSnapshotType) elements.modalSnapshotType.textContent = highlights.positionType;
+  if (elements.modalSnapshotApply) {
+    elements.modalSnapshotApply.textContent = isDirectAts ? 'Direct ATS ✓' : 'Aggregated';
+    elements.modalSnapshotApply.className = isDirectAts ? 'font-bold text-emerald-700 truncate block mt-0.5' : 'font-bold text-slate-700 truncate block mt-0.5';
+  }
+  if (elements.modalSnapshotTechStack) {
+    if (highlights.matchedTech.length > 0) {
+      elements.modalSnapshotTechStack.innerHTML = highlights.matchedTech.map(t => 
+        `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border ${t.color}">${escapeHtml(t.name)}</span>`
+      ).join('');
+    } else {
+      elements.modalSnapshotTechStack.innerHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(highlights.domain)} Competencies</span>`;
+    }
+  }
+
   // Render Description HTML safely with entity decoding & rich formatting
   elements.modalContent.innerHTML = formatJobDescription(job.description);
 
@@ -1101,12 +1268,28 @@ window.openJobModal = function(jobId) {
   elements.jobModal.classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
   elements.modalCloseBtn.focus();
+
+  // Mobile Back Button Support
+  if (!window.__modalHistoryPushed) {
+    window.__modalHistoryPushed = true;
+    history.pushState({ modalOpen: 'jobModal' }, '');
+  }
 };
 
-function closeJobModal() {
+function closeJobModal(fromPopState = false) {
+  if (!elements.jobModal || elements.jobModal.classList.contains('hidden')) return;
   elements.jobModal.classList.add('hidden');
   document.body.classList.remove('overflow-hidden');
   state.selectedJob = null;
+
+  if (!fromPopState && window.__modalHistoryPushed) {
+    window.__modalHistoryPushed = false;
+    if (history.state && history.state.modalOpen) {
+      history.back();
+    }
+  } else if (fromPopState) {
+    window.__modalHistoryPushed = false;
+  }
 }
 
 function updateModalTrackerButtons() {
@@ -1377,13 +1560,22 @@ function formatJobDescription(desc) {
     formatted = txt.value;
   }
 
-  // If plain text with newlines (e.g. from Lever or Adzuna), convert newlines to paragraphs
+  // If plain text with newlines (e.g. from Workday, Lever or Amazon), format bullets & paragraphs
   const hasHtml = /<[a-z][\s\S]*>/i.test(formatted);
   if (!hasHtml) {
-    return formatted
-      .split(/\n\s*\n/)
-      .map(p => `<p class="mb-3 text-slate-700 leading-relaxed">${p.replace(/\n/g, '<br>')}</p>`)
-      .join('');
+    const paragraphs = formatted.split(/\n\s*\n/);
+    return paragraphs.map(p => {
+      const lines = p.split('\n').map(l => l.trim()).filter(Boolean);
+      const bulletLines = lines.filter(l => /^[-*•]\s+/.test(l));
+      if (bulletLines.length >= 2 || (lines.length > 0 && bulletLines.length === lines.length)) {
+        const lis = lines.map(l => {
+          const cleanText = l.replace(/^[-*•]\s+/, '');
+          return `<li class="mb-1">${escapeHtml(cleanText)}</li>`;
+        }).join('');
+        return `<ul class="list-disc pl-5 mb-3 text-slate-700 leading-relaxed">${lis}</ul>`;
+      }
+      return `<p class="mb-3 text-slate-700 leading-relaxed">${escapeHtml(lines.join(' '))}</p>`;
+    }).join('');
   }
 
   // Remove excessive repetitive break tags: <p><br><br></p>
@@ -2200,3 +2392,16 @@ fetchJobs();
 window.openEmployerModal = openEmployerModal;
 window.closeEmployerModal = closeEmployerModal;
 window.submitEmployerJob = submitEmployerJob;
+
+// Native Mobile & Browser Back Button (popstate) Handler
+window.addEventListener('popstate', (e) => {
+  if (elements.jobModal && !elements.jobModal.classList.contains('hidden')) {
+    closeJobModal(true);
+  }
+  if (elements.employerModal && !elements.employerModal.classList.contains('hidden')) {
+    closeEmployerModal(true);
+  }
+  if (elements.jobAlertsModal && !elements.jobAlertsModal.classList.contains('hidden')) {
+    closeJobAlertsModal(true);
+  }
+});
