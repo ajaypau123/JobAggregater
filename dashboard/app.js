@@ -225,6 +225,87 @@ const elements = {
 // DATA LOADING
 // ============================================================
 
+
+function getJobRoleCategory(title) {
+  const t = (title || '').toLowerCase();
+  if (/\b(qa|quality\s+assurance|tester|testing|sdet|test\s+engineer|automation)\b/i.test(t)) return 'qa';
+  if (/\b(engineer|developer|frontend|backend|fullstack|software|programmer)\b/i.test(t)) return 'engineer';
+  if (/\b(devops|cloud|sre|reliability|infrastructure|aws|k8s|kubernetes|sysadmin)\b/i.test(t)) return 'devops';
+  if (/\b(data|ai|machine\s+learning|ml|analyst|analytics|scientist)\b/i.test(t)) return 'data';
+  if (/\b(mobile|android|ios|flutter|react\s+native|swift|kotlin)\b/i.test(t)) return 'mobile';
+  if (/\b(design|designer|ui|ux|product\s+design|graphic)\b/i.test(t)) return 'design';
+  if (/\b(support|service|operations|coordinator|success|specialist|ops)\b/i.test(t)) return 'support';
+  return 'other';
+}
+
+function updateRoleCounters() {
+  if (!state.allJobs || !Array.isArray(state.allJobs)) return;
+
+  // Filter based on active scope (India Eligible vs All)
+  const scopedJobs = state.scopeFilter === 'india'
+    ? state.allJobs.filter(j => j.is_india_eligible !== false)
+    : state.allJobs;
+
+  const counts = {
+    all: scopedJobs.length,
+    qa: 0,
+    engineer: 0,
+    devops: 0,
+    data: 0,
+    mobile: 0,
+    design: 0,
+    support: 0
+  };
+
+  scopedJobs.forEach(j => {
+    const cat = getJobRoleCategory(j.title);
+    if (counts[cat] !== undefined) {
+      counts[cat]++;
+    }
+  });
+
+  // 1. Update Hero Navigation Filter Pills
+  const pillLabels = {
+    all: 'All Roles',
+    qa: '🧪 QA & Testing',
+    engineer: '💻 Software Engineers',
+    devops: '☁️ DevOps & Cloud',
+    data: '📊 Data & AI',
+    mobile: '📱 Mobile Apps',
+    design: '🎨 UI/UX & Design',
+    support: '🎧 Support & Ops'
+  };
+
+  elements.filterPills.forEach(pill => {
+    const f = pill.dataset.filter;
+    if (f && counts[f] !== undefined) {
+      const label = pillLabels[f] || f;
+      pill.innerHTML = `${label} <span class="ml-1.5 px-2 py-0.5 text-[10px] rounded-full font-bold ${pill.classList.contains('active') ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}">${counts[f].toLocaleString()}</span>`;
+    }
+  });
+
+  // 2. Update Primary Job Role Select Dropdown Options
+  if (elements.roleSelect) {
+    const roleOptions = [
+      { val: 'all', label: 'All Roles & Domains' },
+      { val: 'qa', label: '🧪 QA, SDET & Software Testing' },
+      { val: 'engineer', label: '💻 Software Engineers & Developers' },
+      { val: 'devops', label: '☁️ DevOps, Cloud & SRE' },
+      { val: 'data', label: '📊 Data Science, AI & ML' },
+      { val: 'mobile', label: '📱 Mobile Developers (iOS / Android)' },
+      { val: 'design', label: '🎨 UI/UX Design & Product' },
+      { val: 'support', label: '🎧 Tech Support & IT Ops' }
+    ];
+
+    const currentVal = elements.roleSelect.value || 'all';
+    elements.roleSelect.innerHTML = roleOptions.map(opt => {
+      const cnt = counts[opt.val] !== undefined ? ` (${counts[opt.val].toLocaleString()})` : '';
+      const isSel = opt.val === currentVal ? 'selected' : '';
+      return `<option value="${opt.val}" ${isSel}>${opt.label}${cnt}</option>`;
+    }).join('');
+  }
+}
+
 async function fetchJobs() {
   setLoading(true);
   try {
@@ -266,6 +347,7 @@ async function fetchJobs() {
 
     state.allJobs = data;
     elements.headerCountBadge.textContent = `${data.length} verified jobs`;
+    updateRoleCounters();
     updateTrackerCounters();
     updateQuotaUI();
     populateSourceDropdown(data);
@@ -1659,9 +1741,15 @@ elements.clearSearchBtn.addEventListener('click', () => {
 elements.filterPills.forEach(pill => {
   pill.addEventListener('click', () => {
     elements.filterPills.forEach(p => {
-      p.className = 'filter-pill shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition bg-white text-slate-600 hover:text-brand-600 hover:bg-brand-50/60 border border-slate-200/90 shadow-2xs hover:-translate-y-0.5 cursor-pointer';
+      p.classList.remove('active', 'bg-brand-600', 'text-white', 'shadow-xs');
+      p.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200/90');
+      const badge = p.querySelector('span');
+      if (badge) { badge.className = 'ml-1.5 px-2 py-0.5 text-[10px] rounded-full font-bold bg-slate-100 text-slate-600'; }
     });
-    pill.className = 'filter-pill active shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-brand-600 text-white shadow-xs hover:shadow hover:-translate-y-0.5 cursor-pointer';
+    pill.classList.add('active', 'bg-brand-600', 'text-white', 'shadow-xs');
+    pill.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200/90');
+    const activeBadge = pill.querySelector('span');
+    if (activeBadge) { activeBadge.className = 'ml-1.5 px-2 py-0.5 text-[10px] rounded-full font-bold bg-white/20 text-white'; }
     state.activeRoleFilter = pill.dataset.filter;
     if (elements.roleSelect) {
       elements.roleSelect.value = state.activeRoleFilter;
