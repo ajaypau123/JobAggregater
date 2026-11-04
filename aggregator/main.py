@@ -298,7 +298,14 @@ def run(
         except Exception as exc:
             logger.warning("Failed saving to SQLite: %s", exc)
 
-        # Retrieve cumulative active dataset from SQLite so jobs across runs accumulate and never disappear
+        # 1. Prune listings older than 120 days from SQLite
+        try:
+            from aggregator.db import expire_stale_jobs_in_db
+            expire_stale_jobs_in_db(max_age_days=120, db_path=db_path)
+        except Exception as exc:
+            logger.warning("Failed running TTL expiration in DB: %s", exc)
+
+        # 2. Retrieve cumulative active dataset from SQLite so open positions persist across runs
         try:
             cumulative_dataset = get_active_jobs_from_db(db_path=db_path)
             if not cumulative_dataset:
@@ -309,6 +316,17 @@ def run(
         except Exception as exc:
             logger.warning("Failed reading cumulative jobs from SQLite: %s", exc)
             cumulative_dataset = full_dataset
+
+        # 3. Supercharge link-health validator: verify oldest ATS links and mark 404/closed listings
+        try:
+            from aggregator.processing.link_validator import prune_dead_ats_links
+            cumulative_dataset, dead_count = prune_dead_ats_links(
+                cumulative_dataset, max_checks=300, db_path=db_path
+            )
+            if dead_count > 0:
+                logger.info("[Lifecycle] Pruned %d dead/closed ATS links from active feed.", dead_count)
+        except Exception as exc:
+            logger.warning("Failed running ATS link health validator: %s", exc)
 
         df = pd.DataFrame(export_jobs)
         # Ensure all columns are present in the correct order

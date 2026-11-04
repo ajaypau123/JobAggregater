@@ -158,6 +158,7 @@ def get_active_jobs_from_db(db_path: str = DEFAULT_DB_PATH) -> list[dict[str, An
     return jobs
 
 
+
 def query_jobs_from_db(
     db_path: str = DEFAULT_DB_PATH,
     search: str | None = None,
@@ -233,4 +234,49 @@ def query_jobs_from_db(
         j["is_india_eligible"] = bool(j.get("is_india_eligible"))
 
     return jobs
+
+
+def mark_jobs_closed(job_ids: set[str] | list[str], db_path: str = DEFAULT_DB_PATH) -> int:
+    """Mark a set of job IDs as closed in the SQLite database."""
+    if not job_ids:
+        return 0
+    if not os.path.exists(db_path):
+        return 0
+    conn = init_db(db_path)
+    cursor = conn.cursor()
+    ids_list = list(job_ids)
+    chunk_size = 500
+    total_updated = 0
+    for i in range(0, len(ids_list), chunk_size):
+        chunk = ids_list[i : i + chunk_size]
+        placeholders = ",".join("?" for _ in chunk)
+        cursor.execute(
+            f"UPDATE jobs SET status = 'closed', updated_at = CURRENT_TIMESTAMP WHERE job_id IN ({placeholders}) AND status != 'closed'",
+            chunk,
+        )
+        total_updated += cursor.rowcount
+    conn.commit()
+    conn.close()
+    logger.info("[DB] Marked %d jobs as closed in database.", total_updated)
+    return total_updated
+
+
+def expire_stale_jobs_in_db(max_age_days: int = 120, db_path: str = DEFAULT_DB_PATH) -> int:
+    """Mark jobs older than max_age_days as expired in SQLite database."""
+    if not os.path.exists(db_path):
+        return 0
+    conn = init_db(db_path)
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE jobs SET status = 'expired', updated_at = CURRENT_TIMESTAMP "
+        "WHERE status = 'active' AND (posted_date < date('now', ?) OR (posted_date IS NULL AND collected_date < date('now', ?)))",
+        (f"-{int(max_age_days)} days", f"-{int(max_age_days)} days"),
+    )
+    total_expired = cursor.rowcount
+    conn.commit()
+    conn.close()
+    if total_expired > 0:
+        logger.info("[DB] Expired %d stale jobs older than %d days.", total_expired, max_age_days)
+    return total_expired
+
 
