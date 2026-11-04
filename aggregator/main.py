@@ -338,16 +338,27 @@ def run(
                         pass
                 return s
 
+            DASHBOARD_KEYS = [
+                "job_id", "title", "company", "location", "country",
+                "remote_type", "employment_type", "experience", "salary",
+                "description", "apply_url", "direct_apply_url", "source",
+                "posted_date", "is_direct_ats", "is_india_eligible",
+            ]
+
             def _to_lightweight(j: dict) -> dict:
-                c = dict(j)
+                c = {}
+                for k in DASHBOARD_KEYS:
+                    val = j.get(k)
+                    if val is not None and val != "":
+                        c[k] = val
                 c["title"] = _clean_str(c.get("title"))
                 c["company"] = _clean_str(c.get("company"))
                 c["location"] = _clean_str(c.get("location"))
                 desc = _clean_str(c.get("description"))
                 text = re.sub(r"<[^>]+>", " ", desc)
                 text = re.sub(r"\s+", " ", text).strip()
-                if len(text) > 600:
-                    c["description"] = text[:600] + "... [Click 'Apply on Official Site' for full requirements]"
+                if len(text) > 220:
+                    c["description"] = text[:220] + "... [Click 'Apply on Official Site' for full requirements]"
                 else:
                     c["description"] = text
                 return c
@@ -362,21 +373,18 @@ def run(
             dashboard_dir = os.path.join(os.path.dirname(output_dir), "dashboard")
             if os.path.isdir(dashboard_dir):
                 # Prepare high-performance lightweight dataset for the browser
-                if india_eligible:
-                    dash_jobs = [
-                        _to_lightweight(j)
-                        for j in cumulative_dataset
-                        if j.get("is_india_eligible") is not False
-                    ]
-                else:
-                    dash_jobs = [_to_lightweight(j) for j in cumulative_dataset]
+                # Include 100% of India-eligible jobs + up to 800 recent global roles so both scope filter options work smoothly
+                india_jobs = [j for j in cumulative_dataset if j.get("is_india_eligible") is True]
+                other_jobs = [j for j in cumulative_dataset if j.get("is_india_eligible") is not True][:800]
+                selected_dash = india_jobs + other_jobs
+                dash_jobs = [_to_lightweight(j) for j in selected_dash]
 
                 dash_json = os.path.join(dashboard_dir, "jobs_latest.json")
                 with open(dash_json, "w", encoding="utf-8") as f:
                     json.dump(dash_jobs, f, indent=2, ensure_ascii=False)
                 dash_js = os.path.join(dashboard_dir, "jobs_latest.js")
                 clean_js = (
-                    json.dumps(dash_jobs, ensure_ascii=False)
+                    json.dumps(dash_jobs, separators=(",", ":"), ensure_ascii=False)
                     .replace("\u2028", "\\u2028")
                     .replace("\u2029", "\\u2029")
                 )

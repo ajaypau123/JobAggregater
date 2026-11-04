@@ -589,9 +589,22 @@ def _normalize_ats_greenhouse(raw: dict) -> dict:
 
     loc_obj = raw.get("location")
     if isinstance(loc_obj, dict):
-        location = _clean_str(loc_obj.get("name"))
+        primary_loc = _clean_str(loc_obj.get("name"))
     else:
-        location = _clean_str(loc_obj)
+        primary_loc = _clean_str(loc_obj)
+
+    loc_parts = []
+    if primary_loc:
+        loc_parts.append(primary_loc)
+
+    for off in (raw.get("offices") or []):
+        if isinstance(off, dict):
+            for key in ("name", "location"):
+                val = _clean_str(off.get(key))
+                if val and val not in loc_parts:
+                    loc_parts.append(val)
+
+    location = " | ".join(loc_parts) if loc_parts else None
 
     remote_type = None
     if location and "remote" in location.lower():
@@ -623,7 +636,17 @@ def _normalize_ats_lever(raw: dict) -> dict:
     company = _clean_str(raw.get("_company_name"))
 
     categories = raw.get("categories") or {}
-    location = _clean_str(categories.get("location"))
+    loc_parts = []
+    primary_loc = _clean_str(categories.get("location"))
+    if primary_loc:
+        loc_parts.append(primary_loc)
+
+    for al in (categories.get("allLocations") or []):
+        al_str = _clean_str(al)
+        if al_str and al_str not in loc_parts:
+            loc_parts.append(al_str)
+
+    location = " | ".join(loc_parts) if loc_parts else None
 
     wp = (raw.get("workplaceType") or "").lower()
     if wp == "remote" or (location and "remote" in location.lower()):
@@ -669,7 +692,20 @@ def _normalize_ats_ashby(raw: dict) -> dict:
     source_job_id = str(raw.get("id") or "")
     title = _clean_str(raw.get("title"))
     company = _clean_str(raw.get("_company_name"))
-    location = _clean_str(raw.get("location"))
+    loc_parts = []
+    primary_loc = _clean_str(raw.get("location"))
+    if primary_loc:
+        loc_parts.append(primary_loc)
+
+    for sl in (raw.get("secondaryLocations") or []):
+        if isinstance(sl, dict):
+            s_name = _clean_str(sl.get("location") or sl.get("name"))
+        else:
+            s_name = _clean_str(sl)
+        if s_name and s_name not in loc_parts:
+            loc_parts.append(s_name)
+
+    location = " | ".join(loc_parts) if loc_parts else None
 
     wp = (raw.get("workplaceType") or "").lower()
     if raw.get("isRemote") or wp == "remote" or (location and "remote" in location.lower()):

@@ -22,16 +22,18 @@ from typing import List, Dict, Any, Optional
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("AlertDispatcher")
 
-# Role category keyword map
+import re
+
+# Role category regex pattern map (with boundary checking to avoid substring collisions)
 ROLE_KEYWORDS = {
-    "qa": ["qa", "test", "quality", "sdet", "automation", "cypress", "selenium", "playwright"],
-    "frontend": ["frontend", "front-end", "react", "next.js", "vue", "angular", "javascript", "typescript", "ui developer"],
-    "backend": ["backend", "back-end", "node", "python", "golang", "go ", "java ", "spring", "rust", "c++", "c#", ".net"],
-    "fullstack": ["fullstack", "full-stack", "full stack", "software engineer"],
-    "devops": ["devops", "sre", "cloud", "aws", "kubernetes", "k8s", "docker", "terraform", "infrastructure"],
-    "data": ["data engineer", "ai", "ml", "machine learning", "data scientist", "analytics", "bi developer"],
-    "mobile": ["android", "ios", "flutter", "react native", "swift", "kotlin mobile"],
-    "product": ["product manager", "ui/ux", "ux designer", "product design"]
+    "qa": [r"\bqa\b", r"\btest", r"\bquality\b", r"\bsdet\b", r"\bautomation\b", r"\bcypress\b", r"\bselenium\b", r"\bplaywright\b"],
+    "frontend": [r"\bfrontend\b", r"\bfront-end\b", r"\breact\b", r"\bnext\.js\b", r"\bvue\b", r"\bangular\b", r"\bjavascript\b", r"\btypescript\b", r"\bui\s+developer\b"],
+    "backend": [r"\bbackend\b", r"\bback-end\b", r"\bnode(?:\.js)?\b", r"\bpython\b", r"\bgolang\b", r"\bgo\b", r"\bjava\b", r"\bspring\b", r"\brust\b", r"\bc\+\+\b", r"\bc#\b", r"\b\.net\b"],
+    "fullstack": [r"\bfullstack\b", r"\bfull-stack\b", r"\bfull\s+stack\b", r"\bsoftware\s+engineer\b"],
+    "devops": [r"\bdevops\b", r"\bsre\b", r"\bcloud\b", r"\baws\b", r"\bkubernetes\b", r"\bk8s\b", r"\bdocker\b", r"\bterraform\b", r"\binfrastructure\b"],
+    "data": [r"\bdata\s+engineer\b", r"\bai\b", r"\bml\b", r"\bmachine\s+learning\b", r"\bdata\s+scientist\b", r"\banalytics\b", r"\bbi\s+developer\b"],
+    "mobile": [r"\bandroid\b", r"\bios\b", r"\bflutter\b", r"\breact\s+native\b", r"\bswift\b", r"\bkotlin\b"],
+    "product": [r"\bproduct\s+manager\b", r"\bui/ux\b", r"\bux\s+designer\b", r"\bproduct\s+design\b"]
 }
 
 CITY_SYNONYMS = {
@@ -96,6 +98,10 @@ def load_subscribers(subscribers_file: str = "output/subscribers.json") -> List[
 
 def matches_subscriber(job: Dict[str, Any], sub: Dict[str, Any]) -> bool:
     """Evaluates whether a job matches a subscriber's alert preferences."""
+    # 0. Always enforce India Candidate Eligibility for JobsForIndia alerts
+    if job.get("is_india_eligible") is False:
+        return False
+
     title = (job.get("title") or "").lower()
     desc = (job.get("description") or "").lower()
     location = (job.get("location") or "").lower()
@@ -103,10 +109,10 @@ def matches_subscriber(job: Dict[str, Any], sub: Dict[str, Any]) -> bool:
     user_keywords = (sub.get("keywords") or "").lower().strip()
     target_location = sub.get("location", "any").lower().strip()
 
-    # 1. Role category filter
+    # 1. Role category filter (boundary regex matching)
     if target_category != "all" and target_category in ROLE_KEYWORDS:
-        keywords = ROLE_KEYWORDS[target_category]
-        if not any(kw in title for kw in keywords):
+        patterns = ROLE_KEYWORDS[target_category]
+        if not any(re.search(pat, title, re.IGNORECASE) for pat in patterns):
             return False
 
     # 2. Custom user keywords

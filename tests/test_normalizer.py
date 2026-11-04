@@ -388,3 +388,48 @@ class TestHelpers:
         id1 = _make_job_id("Remotive", "12345", None)
         id2 = _make_job_id("Jobicy", "12345", None)
         assert id1 != id2
+
+    def test_normalize_secondary_locations_greenhouse(self):
+        raw = {
+            "id": 888,
+            "_ats_type": "greenhouse",
+            "_company_name": "Databricks",
+            "title": "Software Engineer",
+            "location": {"name": "San Francisco, CA"},
+            "offices": [{"name": "Bengaluru", "location": "India"}],
+            "absolute_url": "https://boards.greenhouse.io/databricks/jobs/888",
+        }
+        job = normalize(raw, "CompanyATS")
+        assert "Bengaluru" in job["location"]
+        assert "India" in job["location"]
+        assert "San Francisco" in job["location"]
+
+    def test_normalize_secondary_locations_lever(self):
+        raw = {
+            "id": "lev-99",
+            "_ats_type": "lever",
+            "_company_name": "Spotify",
+            "text": "Backend Engineer",
+            "categories": {
+                "location": "Stockholm, Sweden",
+                "allLocations": ["Stockholm, Sweden", "Bangalore, India", "London, UK"],
+            },
+            "hostedUrl": "https://jobs.lever.co/spotify/lev-99",
+        }
+        job = normalize(raw, "CompanyATS")
+        assert "Bangalore, India" in job["location"]
+        assert "Stockholm" in job["location"]
+
+    def test_normalize_secondary_locations_ashby(self):
+        raw = {
+            "id": "ash-77",
+            "_ats_type": "ashby",
+            "_company_name": "Notion",
+            "title": "Fullstack Engineer",
+            "location": "San Francisco, CA",
+            "secondaryLocations": [{"location": "Hyderabad, India"}],
+            "jobUrl": "https://jobs.ashbyhq.com/notion/ash-77",
+        }
+        job = normalize(raw, "CompanyATS")
+        assert "Hyderabad, India" in job["location"]
+        assert "San Francisco" in job["location"]

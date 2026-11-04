@@ -59,19 +59,29 @@ class WorkdaySource(BaseJobSource):
         """Iterate through configured Workday companies and collect active Indian job postings."""
         all_jobs: list[dict] = []
 
-        logger.info("[Workday] Querying %d curated Big 4 & MNC Workday endpoints...", len(self.companies))
+        logger.info("[Workday] Querying %d curated Big 4 & MNC Workday endpoints concurrently...", len(self.companies))
 
-        for comp in self.companies:
-            try:
-                jobs = self._collect_company(comp)
-                all_jobs.extend(jobs)
-                logger.debug("[Workday] %s: %d jobs retrieved", comp.name, len(jobs))
-            except Exception as e:
-                logger.warning("[Workday] Could not fetch %s: %s", comp.name, e)
-                continue
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            future_to_comp = {executor.submit(self._collect_company_safe, comp): comp for comp in self.companies}
+            for future in concurrent.futures.as_completed(future_to_comp):
+                comp = future_to_comp[future]
+                try:
+                    jobs = future.result()
+                    all_jobs.extend(jobs)
+                    logger.debug("[Workday] %s: %d jobs retrieved", comp.name, len(jobs))
+                except Exception as e:
+                    logger.warning("[Workday] Could not fetch %s: %s", comp.name, e)
 
         logger.info("[Workday] Total verified Big 4 & MNC Workday jobs collected: %d", len(all_jobs))
         return all_jobs
+
+    def _collect_company_safe(self, comp: WorkdayCompany) -> list[dict]:
+        try:
+            return self._collect_company(comp)
+        except Exception as e:
+            logger.warning("[Workday] Could not fetch %s: %s", comp.name, e)
+            return []
 
     def _collect_company(self, company: WorkdayCompany) -> list[dict]:
         """Fetch active jobs for a single Workday tenant in fast batch mode."""

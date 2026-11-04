@@ -25,22 +25,31 @@ class CompanyATSSource(BaseJobSource):
         })
 
     def collect_jobs(self) -> list[dict]:
-        """Iterate through configured companies and collect their active public postings."""
+        """Iterate through configured companies and collect their active public postings concurrently."""
         all_jobs: list[dict] = []
+        logger.info("[CompanyATS] Querying %d curated company ATS endpoints concurrently...", len(self.companies))
 
-        logger.info("[CompanyATS] Querying %d curated company ATS endpoints...", len(self.companies))
-
-        for comp in self.companies:
-            try:
-                jobs = self._collect_company(comp)
-                all_jobs.extend(jobs)
-                logger.debug("[CompanyATS] %s (%s): %d jobs found", comp.name, comp.ats_type, len(jobs))
-            except Exception as e:
-                logger.warning("[CompanyATS] Could not fetch %s (%s): %s", comp.name, comp.ats_type, e)
-                continue
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            future_to_comp = {executor.submit(self._collect_company_safe, comp): comp for comp in self.companies}
+            for future in concurrent.futures.as_completed(future_to_comp):
+                comp = future_to_comp[future]
+                try:
+                    jobs = future.result()
+                    all_jobs.extend(jobs)
+                    logger.debug("[CompanyATS] %s (%s): %d jobs found", comp.name, comp.ats_type, len(jobs))
+                except Exception as e:
+                    logger.warning("[CompanyATS] Could not fetch %s (%s): %s", comp.name, comp.ats_type, e)
 
         logger.info("[CompanyATS] Total company ATS jobs retrieved: %d", len(all_jobs))
         return all_jobs
+
+    def _collect_company_safe(self, comp: ATSCompany) -> list[dict]:
+        try:
+            return self._collect_company(comp)
+        except Exception as e:
+            logger.warning("[CompanyATS] Error collecting %s (%s): %s", comp.name, comp.ats_type, e)
+            return []
 
     def _collect_company(self, company: ATSCompany) -> list[dict]:
         """Fetch raw jobs for a single company based on its ATS platform."""
