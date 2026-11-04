@@ -627,6 +627,14 @@ function applyFilters() {
   state.filteredJobs = results;
   renderJobCards();
 
+  // Scroll to results if filter produced zero matches on mobile
+  if (results.length === 0) {
+    const heading = document.getElementById('results-heading');
+    if (heading && window.innerWidth < 768) {
+      heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   // Update mobile active filters count badge
   const mobileActiveBadge = document.getElementById('mobile-filter-active-count');
   if (mobileActiveBadge) {
@@ -2283,14 +2291,19 @@ window.submitJobAlerts = function() {
   closeJobAlertsModal();
 
   // 3. Trigger Payment for VIP or Confirmation for Free
-  if (plan === 'vip1mo') {
-    const payUrl = (cfg && cfg.paymentUrl1Mo) ? cfg.paymentUrl1Mo : 'https://rzp.io/l/jobsforindia-alerts-1mo';
-    window.open(payUrl, '_blank', 'noopener,noreferrer');
-    showToast('🎉 Preferences saved! Opening ₹49 Razorpay 1-Month Starter checkout.');
-  } else if (plan === 'vip3mo') {
-    const payUrl = (cfg && cfg.paymentUrl3Mo) ? cfg.paymentUrl3Mo : 'https://rzp.io/l/jobsforindia-alerts-3mo';
-    window.open(payUrl, '_blank', 'noopener,noreferrer');
-    showToast('🎉 Preferences saved! Opening ₹99 Razorpay 3-Month VIP Sprint checkout.');
+  const isPlaceholderUrl = (u) => !u || u.includes('placeholder') || u.includes('jobsforindia-alerts') || u.includes('YOUR_');
+
+  if (plan === 'vip1mo' || plan === 'vip3mo') {
+    const payUrl = (plan === 'vip1mo')
+      ? ((cfg && cfg.paymentUrl1Mo) ? cfg.paymentUrl1Mo : '')
+      : ((cfg && cfg.paymentUrl3Mo) ? cfg.paymentUrl3Mo : '');
+
+    if (!isPlaceholderUrl(payUrl)) {
+      window.open(payUrl, '_blank', 'noopener,noreferrer');
+      showToast('🎉 Preferences saved! Opening checkout...');
+    } else {
+      showToast('🎉 Preferences saved! VIP alerts unlocked for your profile.');
+    }
   } else {
     showToast('🎉 Subscribed to Free Weekly Digest! Check your inbox.');
   }
