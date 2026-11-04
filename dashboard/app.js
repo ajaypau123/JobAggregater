@@ -2248,8 +2248,8 @@ window.submitJobAlerts = function() {
   const keywords = (document.getElementById('alert-keywords')?.value || '').trim();
   const location = document.getElementById('alert-location')?.value || 'any';
   const exp = document.getElementById('alert-exp')?.value || 'all';
-  const channel = document.querySelector('input[name="alert_channel"]:checked')?.value || 'email';
-  const phone = (document.getElementById('alert-phone')?.value || '').trim();
+  const channel = 'email';
+  const phone = '';
   const selectedPlanEl = document.querySelector('input[name="alert_plan"]:checked');
   const plan = selectedPlanEl ? selectedPlanEl.value : 'free_digest';
 
